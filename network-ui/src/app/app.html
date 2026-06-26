@@ -1,0 +1,160 @@
+<div class="dashboard-container">
+
+  <!-- ÜST BAŞLIK ALANI VE GLOBAL TARAMA BUTONU -->
+  <div class="dashboard-header">
+    <h2>Ağ Cihazı Durum İzleyici</h2>
+    <button (click)="scanAll()" class="btn-primary btn-scan" [disabled]="isScanning">
+      {{ isScanning ? '🔄 Ağ Taranıyor...' : '⚡ Tüm Ağı Tara' }}
+    </button>
+  </div>
+
+  <!-- CANLI OLAY (INCIDENT) ALARM YÖNETİM MERKEZİ -->
+  <div *ngIf="incidents.length > 0" class="incident-board">
+    <h3>🚨 TEHLİKE: AKTİF KRİTİK OLAYLAR (INCIDENTS) DETEKTED</h3>
+    <div class="incident-list">
+      <div *ngFor="let inc of incidents" class="incident-item">
+        <div>
+          <span class="alert-tag">[ALERT]</span>
+          <strong>{{ inc.deviceName }}</strong>
+          <code>({{ inc.ipAddress }})</code>
+          <span class="incident-time">Erişilemez durumda! Kesinti Zamanı: {{ inc.detectedTime | date:'HH:mm:ss' }}</span>
+        </div>
+        <button (click)="acknowledgeIncident(inc.deviceId)" class="btn-action btn-ack">Almı Onayla (Ack)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SİSTEM TEHDİT DURUMU BARBARI -->
+  <div class="threat-level-bar" [style.background]="threatLevel.bg" [style.border-color]="threatLevel.color">
+    <div class="threat-level-left">
+      <span class="threat-indicator-dot" [style.background]="threatLevel.color"></span>
+      <span class="threat-label">SİSTEM TEHDİT DURUMU:</span>
+      <strong [style.color]="threatLevel.color">{{ threatLevel.status }}</strong>
+    </div>
+    <div class="threat-level-right">SIEM Operasyon Standartları Aktif.</div>
+  </div>
+
+  <!-- ANALİZ KARTLARI -->
+  <div class="stats-grid">
+    <div class="stat-box">Toplam Cihaz: <strong>{{ totalDevices }}</strong></div>
+    <div class="stat-box stat-active">Aktif: <strong>{{ activeDevices }}</strong></div>
+    <div class="stat-box stat-inactive">Erişilemez: <strong>{{ inactiveDevices }}</strong></div>
+    <div class="stat-box stat-latency">Ort. Yanıt: <strong>{{ avgLatency }} ms</strong></div>
+  </div>
+
+  <!-- GELİŞTİRİLMİŞ TİPOLOJİ FORM ALANI -->
+  <div class="form-card">
+    <h3>Yeni Altyapı Düğümü (Node) Entegre Et</h3>
+    <div class="form-group">
+      <input type="text" [(ngModel)]="deviceName" placeholder="Cihaz Adı (Örn: DB-Core-01)" class="modern-input">
+      <input type="text" [(ngModel)]="deviceIp" placeholder="IP Adresi (Örn: 10.0.0.4)" class="modern-input">
+
+      <select [(ngModel)]="selectedType" class="modern-input filter-select">
+        <option value="SERVER">🖥️ SERVER</option>
+        <option value="FIREWALL">🛡️ FIREWALL</option>
+        <option value="ROUTER">🌐 ROUTER</option>
+        <option value="SWITCH">🎛️ SWITCH</option>
+      </select>
+
+      <button (click)="createDevice()" class="btn-primary">Sisteme Kaydet</button>
+    </div>
+  </div>
+
+  <!-- ARAMA VE CANLI FİLTRELEME ÇUBUĞU -->
+  <div class="filter-bar">
+    <input type="text" [(ngModel)]="searchTerm" placeholder="🔍 Cihaz adı veya IP adresi ile ara..." class="modern-input filter-search">
+    <select [(ngModel)]="statusFilter" class="modern-input filter-select">
+      <option value="ALL">Tüm Durumlar</option>
+      <option value="ACTIVE">Sadece ACTIVE</option>
+      <option value="INACTIVE">Sadece INACTIVE</option>
+    </select>
+  </div>
+
+  <!-- Cihaz Listesi Tablosu -->
+  <div class="table-container">
+    <table class="modern-table">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Tip</th>
+        <th>Cihaz Cinsi</th>
+        <th>IP Adresi</th>
+        <th>Gecikme</th>
+        <th>Durum</th>
+        <th>Canlı Trend (Son 5)</th>
+        <th>Aksiyonlar</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let device of filteredDevices">
+        <td><strong>#{{ device.id }}</strong></td>
+
+        <td class="type-icon-col">
+          <span *ngIf="device.deviceType === 'FIREWALL'">🛡️</span>
+          <span *ngIf="device.deviceType === 'SERVER'">🖥️</span>
+          <span *ngIf="device.deviceType === 'ROUTER'">🌐</span>
+          <span *ngIf="device.deviceType === 'SWITCH'">🎛️</span>
+          <span *ngIf="!device.deviceType">🖥️</span>
+        </td>
+
+        <td>{{ device.name }}</td>
+        <td><code>{{ device.ipAddress }}</code></td>
+        <td>
+          <span *ngIf="device.latency !== undefined && device.latency >= 0" class="latency-active">⚡ {{ device.latency }} ms</span>
+          <span *ngIf="device.latency === undefined || device.latency === -1" class="latency-na">N/A</span>
+        </td>
+        <td>
+          <span class="badge" [ngClass]="{
+            'badge-active': device.status === 'ACTIVE',
+            'badge-inactive': device.status === 'INACTIVE',
+            'badge-unknown': device.status === 'UNKNOWN'
+          }">{{ device.status }}</span>
+        </td>
+
+        <!-- SATIR BAZLI SPARKLINE TREND GÖRSELLEŞTİRME -->
+        <td>
+          <div class="trend-container">
+            <div *ngFor="let hStatus of deviceTrends[device.id || 0]"
+                 class="trend-dot"
+                 [style.background]="hStatus === 'ACTIVE' ? '#22c55e' : '#ef4444'"
+                 [title]="hStatus">
+            </div>
+            <span *ngIf="!deviceTrends[device.id || 0] || deviceTrends[device.id || 0].length === 0" class="trend-empty">Veri bekleniyor...</span>
+          </div>
+        </td>
+
+        <td>
+          <button (click)="pingDevice(device.id)" class="btn-action">Anlık Ping</button>
+          <button (click)="deleteDevice(device.id)" class="btn-action btn-delete">Sil</button>
+        </td>
+      </tr>
+      <tr *ngIf="filteredDevices.length === 0">
+        <td colspan="8" class="no-data-row">Kriterlere uygun cihaz kaydı tespit edilemedi.</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Siber Güvenlik Terminal Log Paneli -->
+  <div class="terminal-card">
+    <div class="terminal-header">
+      <h3 class="terminal-title">⚡ AUDIT LOG // NETWORK_SECURITY_STREAM</h3>
+      <div class="terminal-actions">
+        <input type="text" [(ngModel)]="logSearchTerm" placeholder="🔍 Loglarda filtrele..." class="modern-input log-filter">
+        <button (click)="clearConsoleDisplay()" class="btn-terminal-refresh btn-clear">Temizle</button>
+        <button (click)="exportLogsAsTxt()" class="btn-terminal-refresh btn-export">Raporu İndir (.TXT)</button>
+        <button (click)="loadLogs()" class="btn-terminal-refresh">Yenile</button>
+      </div>
+    </div>
+
+    <div class="terminal-body">
+      <div *ngFor="let log of filteredLogs" class="terminal-row">
+        <span class="terminal-timestamp">[{{ log.timestamp | date:'dd.MM.yyyy HH:mm:ss' }}]</span>
+        <span>{{ log.message }}</span>
+      </div>
+      <div *ngIf="filteredLogs.length === 0" class="no-log-row">
+        [SİSTEM] Belirtilen kriterlere uygun veya aktif bir log akışı bulunmuyor.
+      </div>
+    </div>
+  </div>
+</div>
