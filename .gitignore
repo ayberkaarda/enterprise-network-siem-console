@@ -1,0 +1,14 @@
+# Backend (Spring Boot & Java) Çöpleri
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.idea/
+.vscode/
+*.iml
+*.log
+application-local.properties
+
+# Frontend (Angular & Node) Çöpleri
+node_modules/
+dist/
+.angular/
+.npm/
