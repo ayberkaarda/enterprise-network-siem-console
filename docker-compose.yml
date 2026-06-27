@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Veritabanı Servisi
+  siem-db:
+    image: postgres:15-alpine
+    container_name: siem-postgres
+    environment:
+      POSTGRES_DB: siem_console
+      POSTGRES_USER: siem_admin
+      POSTGRES_PASSWORD: SecureNetwork!2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - siem-network
+
+  # 2. Spring Boot Backend Servisi
+  backend:
+    build:
+      context: ./demo
+      dockerfile: Dockerfile
+    container_name: siem-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - siem-db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://siem-db:5432/siem_console
+    networks:
+      - siem-network
+
+  # 3. Angular Frontend Servisi
+  frontend:
+    build:
+      context: ./network-ui
+      dockerfile: Dockerfile
+    container_name: siem-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - siem-network
+
+volumes:
+  postgres_data:
+
+networks:
+  siem-network:
+    driver: bridge

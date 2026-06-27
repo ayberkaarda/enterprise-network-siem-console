@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DeviceService, Device, AuditLog } from './services/device';
-import { interval, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
+import { WebsocketService } from './services/websocket.service';
 
 // Canlı alarm yapısı için arayüz
 interface Incident {
@@ -41,23 +42,27 @@ export class App implements OnInit, OnDestroy {
   // Cihaz ID'sine göre son 5 tarama sonucunu (ACTIVE/INACTIVE) dizide tutar
   deviceTrends: { [key: number]: string[] } = {};
 
-  private pollingSubscription?: Subscription;
+  private wsSubscription?: Subscription;
 
-  constructor(private deviceService: DeviceService) {}
+  constructor(
+      private deviceService: DeviceService,
+      private websocketService: WebsocketService
+  ) {}
 
   ngOnInit() {
     this.loadDevices();
     this.loadLogs();
 
-    this.pollingSubscription = interval(5000).subscribe(() => {
+    // HTTP Polling yerine WebSocket üzerinden anlık dinleme yapıyoruz
+    this.wsSubscription = this.websocketService.alerts$.subscribe((newAlert) => {
       this.loadDevices();
       this.loadLogs();
     });
   }
 
   ngOnDestroy() {
-    if (this.pollingSubscription) {
-      this.pollingSubscription.unsubscribe();
+    if (this.wsSubscription) {
+      this.wsSubscription.unsubscribe();
     }
   }
 
@@ -89,10 +94,10 @@ export class App implements OnInit, OnDestroy {
       }
       const currentHistory = this.deviceTrends[device.id];
       if (
-        device.status &&
-        (currentHistory.length === 0 ||
-          currentHistory[currentHistory.length - 1] !== device.status ||
-          Math.random() > 0.6)
+          device.status &&
+          (currentHistory.length === 0 ||
+              currentHistory[currentHistory.length - 1] !== device.status ||
+              Math.random() > 0.6)
       ) {
         currentHistory.push(device.status);
         if (currentHistory.length > 5) {
@@ -127,8 +132,8 @@ export class App implements OnInit, OnDestroy {
   get filteredDevices(): Device[] {
     return this.devices.filter((d) => {
       const matchesSearch =
-        d.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        d.ipAddress.includes(this.searchTerm);
+          d.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+          d.ipAddress.includes(this.searchTerm);
       const matchesStatus = this.statusFilter === 'ALL' || d.status === this.statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -136,9 +141,9 @@ export class App implements OnInit, OnDestroy {
 
   get filteredLogs(): AuditLog[] {
     return this.logs.filter(
-      (l) =>
-        l.message.toLowerCase().includes(this.logSearchTerm.toLowerCase()) ||
-        l.timestamp.includes(this.logSearchTerm),
+        (l) =>
+            l.message.toLowerCase().includes(this.logSearchTerm.toLowerCase()) ||
+            l.timestamp.includes(this.logSearchTerm),
     );
   }
 
@@ -154,7 +159,7 @@ export class App implements OnInit, OnDestroy {
   }
   get avgLatency(): number {
     const activeWithLatency = this.devices.filter(
-      (d) => d.status === 'ACTIVE' && d.latency !== undefined && d.latency >= 0,
+        (d) => d.status === 'ACTIVE' && d.latency !== undefined && d.latency >= 0,
     );
     if (activeWithLatency.length === 0) return 0;
     const sum = activeWithLatency.reduce((acc, d) => acc + (d.latency || 0), 0);
@@ -187,7 +192,7 @@ export class App implements OnInit, OnDestroy {
   exportLogsAsTxt() {
     if (this.logs.length === 0) return;
     let fileContent =
-      '==================================================\n        KRON AUDIT LOG GÜVENLİK RAPORU\n==================================================\n\n';
+        '==================================================\n        KRON AUDIT LOG GÜVENLİK RAPORU\n==================================================\n\n';
     this.logs.forEach((l) => {
       fileContent += `[${l.timestamp}] - ${l.message}\n`;
     });
@@ -218,7 +223,7 @@ export class App implements OnInit, OnDestroy {
   createDevice() {
     if (!this.deviceName || !this.deviceIp) return;
     const ipPattern =
-      /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
     if (!ipPattern.test(this.deviceIp)) {
       alert('HATA: Lütfen geçerli bir IPv4 adresi girin!');
       return;
