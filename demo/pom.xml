@@ -47,10 +47,6 @@
 		</dependency>
 
 		<!-- Spring Security (API Güvenliği İçin) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
 
 		<!-- Test Bağımlılıkları -->
 		<dependency>

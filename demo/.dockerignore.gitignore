@@ -1,0 +1,8 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!target/dependency/
+*/*.jar
+node_modules/
+.git/
+.idea/
+.vscode/

@@ -7,6 +7,6 @@ COPY . .
 RUN npm run build --prod
 
 FROM nginx:alpine
-COPY --from=build /usr/src/app/dist/network-ui /usr/share/nginx/html
+COPY --from=build /usr/src/app/dist/network-ui/browser /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

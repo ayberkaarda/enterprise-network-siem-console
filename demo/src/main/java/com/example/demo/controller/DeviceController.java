@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController // Bu sınıfın JSON veri dönen bir API Controller olduğunu belirtir
 @RequestMapping("/api/devices") // Bu controller'ın kök URL adresini belirler
-@CrossOrigin(origins = "http://localhost:4200") // Angular frontend uygulmana tarayıcı engeline takılmadan erişim izni verir
+@CrossOrigin(origins = "*") // Angular frontend uygulmana tarayıcı engeline takılmadan erişim izni verir
 public class DeviceController {
 
     private final DeviceService deviceService;
@@ -47,13 +47,13 @@ public class DeviceController {
     }
     // 5. Cihaz Sil (Metot seviyesinde CORS iznini garantiye alıyoruz)
     @DeleteMapping("/{id}")
-    @CrossOrigin(origins = "http://localhost:4200") // Bu satırı metodun hemen üstüne ekle
+    @CrossOrigin(origins = "*") // Bu satırı metodun hemen üstüne ekle
     public void deleteDevice(@PathVariable Long id) {
         deviceService.deleteDevice(id);
     }
     // 6. Tüm Ağı Elle Tetikleyerek Tara (POST http://localhost:8080/api/devices/scan)
     @PostMapping("/scan")
-    @CrossOrigin(origins = "http://localhost:4200")
+    @CrossOrigin(origins = "*")
     public void scanAllDevices() {
         System.out.println(">>> [MANUEL TETİKLEME] Kullanıcı tüm ağ taramasını başlattı.");
         deviceService.checkAllDevicesStatusAutomatically();
