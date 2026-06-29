@@ -206,7 +206,8 @@ export class App implements OnInit, OnDestroy {
 
   clearConsoleDisplay() {
     this.logs = [];
-  }
+    }
+
 
   scanAll() {
     this.isScanning = true;
@@ -219,6 +220,35 @@ export class App implements OnInit, OnDestroy {
       error: () => (this.isScanning = false),
     });
   }
+
+    simulateAttack(id: number | undefined) {
+        if (id === undefined) return;
+        this.deviceService.simulateCyberAttack(id).subscribe(() => {
+            this.loadDevices();
+            this.loadLogs();
+        });
+    }
+
+    simulateSshBruteforce(id: number | undefined) {
+        if (id === undefined) return;
+        this.deviceService.simulateSshBruteForce(id).subscribe(() => {
+            this.loadDevices();
+            this.loadLogs();
+        });
+    }
+
+    exportLogsToCSV() {
+        if (this.logs.length === 0) return;
+        const csvContent = "Tarih,Aksiyon\n" +
+            this.logs.map(log => `"${log.timestamp}","${log.message}"`).join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `siem_guvenlik_raporu_${Date.now()}.csv`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+    }
 
   createDevice() {
     if (!this.deviceName || !this.deviceIp) return;

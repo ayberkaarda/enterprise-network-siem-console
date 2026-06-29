@@ -53,4 +53,11 @@ export class DeviceService {
   scanAllDevices(): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/scan`, {});
   }
+  simulateCyberAttack(id: number) {
+    return this.http.post(`${this.apiUrl}/${id}/attack`, {});
+  }
+
+  simulateSshBruteForce(id: number) {
+    return this.http.post(`${this.apiUrl}/${id}/ssh-bruteforce`, {});
+  }
 }

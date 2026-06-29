@@ -125,6 +125,8 @@
 
         <td>
           <button (click)="pingDevice(device.id)" class="btn-action">Anlık Ping</button>
+          <button class="btn btn-outline-danger btn-sm ms-2" (click)="simulateAttack(device.id)">⚡ DDoS / Port Scan</button>
+          <button class="btn btn-outline-warning btn-sm ms-2" (click)="simulateSshBruteforce(device.id)">🔐 SSH / PAM İhlali</button>
           <button (click)="deleteDevice(device.id)" class="btn-action btn-delete">Sil</button>
         </td>
       </tr>
@@ -143,6 +145,7 @@
         <input type="text" [(ngModel)]="logSearchTerm" placeholder="🔍 Loglarda filtrele..." class="modern-input log-filter">
         <button (click)="clearConsoleDisplay()" class="btn-terminal-refresh btn-clear">Temizle</button>
         <button (click)="exportLogsAsTxt()" class="btn-terminal-refresh btn-export">Raporu İndir (.TXT)</button>
+        <button class="btn btn-secondary btn-sm ms-2" (click)="exportLogsToCSV()">📄 CSV Olarak İndir</button>
         <button (click)="loadLogs()" class="btn-terminal-refresh">Yenile</button>
       </div>
     </div>

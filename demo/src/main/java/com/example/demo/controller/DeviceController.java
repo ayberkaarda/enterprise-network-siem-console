@@ -45,17 +45,34 @@ public class DeviceController {
     public List<AuditLog> getAllLogs() {
         return auditLogRepository.findAll();
     }
+
     // 5. Cihaz Sil (Metot seviyesinde CORS iznini garantiye alıyoruz)
     @DeleteMapping("/{id}")
     @CrossOrigin(origins = "*") // Bu satırı metodun hemen üstüne ekle
     public void deleteDevice(@PathVariable Long id) {
         deviceService.deleteDevice(id);
     }
+
     // 6. Tüm Ağı Elle Tetikleyerek Tara (POST http://localhost:8080/api/devices/scan)
     @PostMapping("/scan")
     @CrossOrigin(origins = "*")
     public void scanAllDevices() {
         System.out.println(">>> [MANUEL TETİKLEME] Kullanıcı tüm ağ taramasını başlattı.");
         deviceService.checkAllDevicesStatusAutomatically();
+    }
+
+    // 7. Siber Saldırı Simülasyonu (YENİ EKLENEN METOT)
+    @PostMapping("/{id}/attack")
+    @CrossOrigin(origins = "*")
+    public void simulateAttack(@PathVariable Long id) {
+        System.out.println(">>> [KIRMIZI TAKIM] Tehdit simülasyonu başlatıldı: Cihaz ID " + id);
+        deviceService.simulateCyberAttack(id);
+    }
+
+    @PostMapping("/{id}/ssh-bruteforce")
+    @CrossOrigin(origins = "*")
+    public void simulateSshBruteForce(@PathVariable Long id) {
+        System.out.println(">>> [KIRMIZI TAKIM] SSH Kaba Kuvvet simülasyonu başlatıldı: Cihaz ID " + id);
+        deviceService.simulateSshBruteForce(id);
     }
 }
