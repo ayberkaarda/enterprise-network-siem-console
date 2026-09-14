@@ -1,320 +1,310 @@
-# ⚡ KRON — Enterprise Network Security & SIEM Console
+# Enterprise Network SIEM Console
 
-![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
-![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+*Türkçe sürüm için: [readme.tr.md](readme.tr.md)*
 
-Kurum içi ağ altyapısındaki (Firewall, Server, Router, Switch) cihazların erişilebilirlik durumunu, ping gecikmelerini (latency) ve stabilite trendlerini **gerçek zamanlı** izleyen; dış kaynaklardan gelen olayları (event) korelasyon kurallarıyla analiz edip incident üreten, rol tabanlı erişim kontrolüne sahip bir **SOC (Security Operations Center)** konsolu.
+A self-hosted, modular-monolith SIEM (Security Information and Event Management)
+console for a network operations team: it watches devices, correlates raw
+signals into incidents with a real lifecycle, pushes updates to a live SOC-style
+dashboard over WebSocket, and gates every sensitive action behind
+role-based authentication.
 
-Proje, bir "ping paneli" olmanın ötesine geçti: kural tabanlı bir korelasyon motoru, tam bir incident yaşam döngüsü (durum makinesi + audit trail), JWT tabanlı kimlik doğrulama ve rol yetkilendirmesi (ADMIN/ANALYST/VIEWER), WebSocket/STOMP üzerinden anlık veri akışı ve Prometheus/Grafana ile gözlemlenebilirlik içeren, kurumsal mühendislik disipliniyle (Temiz Kod, katmanlı mimari, kapsayıcı hata yönetimi) geliştirilen bir sistemdir.
+It started as a small device-ping monitor and audit log. It has since grown
+into a hardened backend (Spring Boot 4.1.0 / Java 26) and an Angular 21.2
+frontend with a rule-driven correlation engine, an incident state machine,
+event ingestion, latency anomaly detection, and JWT/RBAC security — all
+running as a single deployable service plus its supporting infrastructure
+(PostgreSQL, Prometheus, Grafana), no message broker or microservices involved.
 
----
+## Contents
 
-## 🚀 Öne Çıkan Mühendislik Özellikleri & Mimari
+- [Architecture](#architecture)
+- [Feature highlights](#feature-highlights)
+- [Tech stack](#tech-stack)
+- [Repository layout](#repository-layout)
+- [Getting started (Docker Compose)](#getting-started-docker-compose)
+- [Local development](#local-development)
+- [API overview](#api-overview)
+- [Real-time channel](#real-time-channel)
+- [Testing](#testing)
+- [CI/CD](#cicd)
+- [Monitoring](#monitoring)
+- [Architecture decisions](#architecture-decisions)
+- [Security notes](#security-notes)
 
-### 1. Kural Tabanlı Korelasyon Motoru
-`CorrelationEngine`, olayları koda gömülü mantık yerine veritabanındaki `Rule` kayıtlarına göre değerlendirir. Kayan zaman penceresi (sliding window) hesaplaması bellek içi bir önbellek (Caffeine) üzerinden yapılır; her olay için senkron bir veritabanı sorgusu atılmaz.
-
-### 2. Tam Incident Yaşam Döngüsü
-Bir incident `OPEN → ACKNOWLEDGED → IN_PROGRESS → RESOLVED → CLOSED` durum makinesini izler; geçersiz bir geçiş (örn. doğrudan `OPEN → CLOSED`) reddedilir. Severity (INFO/LOW/MEDIUM/HIGH/CRITICAL), yorumlar (`IncidentComment`) ve tam audit trail ile birlikte gelir.
-
-### 3. Gerçek Zamanlı Olay Akışı (WebSocket/STOMP)
-Cihaz durum değişiklikleri, yeni incident'ler ve canlı metrikler `/topic/devices`, `/topic/incidents` ve `/topic/metrics` üzerinden anlık olarak istemciye push edilir; bağlantı düşerse Angular tarafındaki `RealtimeService` yeniden bağlanmayı dener.
-
-### 4. Olay Alım (Event Ingestion) API'si
-Yalnızca ping değil; dış kaynaklardan normalize edilmiş güvenlik olayları `POST /api/v1/events` ile kabul edilir, hız sınırlaması (Bucket4j) uygulanır ve korelasyon motorundan geçer. Olay önce kalıcı hale getirilir, korelasyon değerlendirmesi ondan sonra yapılır — bir korelasyon hatası kaydın kendisini asla kaybettirmez.
-
-### 5. Gerçek Kimlik Doğrulama ve Yetkilendirme
-Spring Security + JWT (access/refresh token çifti). Hassas her uç noktada method-level `@PreAuthorize` gerçek bir yetki sınırıdır; Angular tarafındaki route guard ve rol bazlı arayüz gizleme yalnızca kullanıcı deneyimi katmanıdır, güvenlik sınırı orada değildir.
-
-### 6. Merkezi Hata Yönetimi (RFC 7807)
-API hataları `ProblemDetail` (RFC 7807 Problem Details) formatında döner; frontend interceptor ham sunucu mesajını değil, hata koduna karşılık gelen kullanıcıya uygun mesajı gösterir.
-
----
-
-## 🗺️ Mimari Diyagram
+## Architecture
 
 ```mermaid
 flowchart LR
-    subgraph Client["Browser"]
-        UI["Angular 21 Console<br/>(login • devices • incidents • events)"]
+    subgraph Browser
+        UI["Angular 21.2 console<br/>signals + OnPush"]
     end
 
-    subgraph Backend["Spring Boot 4.1 · Java 26 (demo/)"]
-        REST["REST API<br/>/api/v1/*"]
-        WS["STOMP Broker<br/>/topic/devices · /topic/incidents · /topic/metrics"]
-        CORR["CorrelationEngine<br/>(sliding-window rules)"]
-        INC["Incident state machine"]
-        ANOM["EWMA anomaly detection"]
-        TI["ThreatIntelProvider<br/>(local blocklist)"]
-        SEC["Spring Security<br/>JWT + RBAC"]
-        ACT["Actuator + Micrometer"]
+    subgraph Backend["Spring Boot 4.1.0 / Java 26 (single deployable)"]
+        REST["REST API<br/>/api/v1/**"]
+        WS["STOMP broker<br/>/topic/devices · /topic/incidents · /topic/metrics"]
+        ENGINE["CorrelationEngine<br/>sliding-window rule evaluation"]
+        SM["Incident state machine"]
+        SEC["JWT auth + RBAC<br/>rate limiting"]
     end
 
-    DB[("PostgreSQL 15<br/>siem_console")]
+    DB[("PostgreSQL 15<br/>Flyway-managed schema")]
     PROM["Prometheus"]
     GRAF["Grafana"]
 
-    UI -- "HTTPS / REST (Bearer JWT)" --> REST
-    UI <-- "WebSocket / STOMP" --> WS
+    UI -- "HTTPS / REST" --> REST
+    UI -- "SockJS + STOMP" --> WS
     REST --> SEC
-    REST --> CORR
-    REST --> INC
-    CORR --> TI
-    CORR --> ANOM
+    REST --> ENGINE
+    REST --> SM
+    ENGINE --> DB
+    SM --> DB
     REST --> DB
-    WS --> DB
-    ACT -- "/actuator/prometheus" --> PROM
+    WS -.->|"push on change"| UI
+    Backend -- "/actuator/prometheus" --> PROM
     PROM --> GRAF
-    CORR -. "emits" .-> WS
-    INC -. "emits" .-> WS
 ```
 
-Büyük mimari kararların gerekçesi (neden PostgreSQL, neden WebSocket/STOMP, görsel kimlik) `docs/adr/` altındadır — bkz. [Further reading](#-further-reading--adrs).
+The correlation engine reads its rules from the database (`correlation_rule`
+table), not from code — a sliding-window evaluation runs in memory
+(no per-event database round trip), and an operator can add, edit or disable a
+rule at runtime through the Rules screen. Incidents move through a fixed
+lifecycle (`OPEN → ACKNOWLEDGED → IN_PROGRESS → RESOLVED → CLOSED`); an
+invalid transition (e.g. skipping straight to `CLOSED`) is rejected, and every
+transition is written to the audit trail.
 
----
+## Feature highlights
 
-## 📂 Proje Yapısı (Monorepo)
+- **Device inventory & monitoring** — register devices, run on-demand or
+  scheduled reachability checks (virtual-thread fan-out, so scan time doesn't
+  grow linearly with device count), and a small built-in attack/SSH-brute-force
+  simulator for demoing detection without needing real malicious traffic.
+- **Correlation engine** — rules stored as data (device flapping, same-subnet
+  outage, latency anomaly, event burst), evaluated against an in-memory
+  sliding window; an unrecognized or malformed rule condition is rejected at
+  write time instead of silently never firing.
+- **Incident lifecycle** — a real state machine with comments, MITRE ATT&CK
+  technique tagging, severity, and an assignee field; every state change is
+  audited.
+- **Event ingestion** — a whitelisted, normalized, rate-limited `POST
+  /api/v1/events` endpoint feeds the correlation engine.
+- **Latency anomaly detection** — an EWMA-based baseline per device flags
+  abnormal latency; per-device latency history is retained and purged on a
+  schedule.
+- **Threat intelligence** — an abstracted `ThreatIntelProvider` (a local
+  IP-reputation blocklist today) that the rest of the codebase never talks to
+  directly, so a real external feed can be dropped in later.
+- **Real-time push** — WebSocket/STOMP topics for devices, incidents and
+  metrics, authenticated at the CONNECT frame, with the frontend falling back
+  to polling if the socket can't stay up.
+- **Authentication & RBAC** — JWT access/refresh tokens, three roles
+  (`ADMIN` / `ANALYST` / `VIEWER`), enforced with `@PreAuthorize` on the
+  backend (the UI's own role-based hiding is a convenience, not the security
+  boundary).
+- **Dark SOC-styled console** — signals + `OnPush` change detection, a live
+  threat-level indicator, per-device latency sparkline, incident-trend and
+  severity-distribution charts (hand-rolled inline SVG, no charting library
+  dependency), and an incident comment thread.
+- **Observability** — Micrometer metrics (scan duration, open incidents,
+  ingest rate) with an importable Grafana dashboard.
+- **Demo data** — a one-time, gated seeder gives a fresh checkout nine
+  realistic devices instead of an empty dashboard.
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Spring Boot 4.1.0, Java 26, Spring Security, Spring Data JPA, Spring WebSocket (STOMP), Flyway, MapStruct, ShedLock, Bucket4j, springdoc-openapi |
+| Frontend | Angular 21.2 (standalone components, signals), TypeScript 5.9, RxJS 7.8, `@stomp/stompjs` + `sockjs-client` |
+| Database | PostgreSQL 15 (Flyway-versioned schema); H2 in-memory for the test profile |
+| Testing | JUnit 5, Mockito, Testcontainers (backend); Vitest 4 via Angular's test builder, Playwright (frontend) |
+| Code quality | Spotless + palantir-java-format (backend), ESLint via `@angular-eslint` (frontend) |
+| Infrastructure | Docker Compose, Prometheus, Grafana |
+
+## Repository layout
 
 ```
-demo/                  Spring Boot 4.1 backend (Java 26, Maven wrapper)
+demo/                 Spring Boot backend (Maven wrapper: ./mvnw)
   src/main/java/com/example/demo/
-    device/             cihaz CRUD, tarama, sorgu API'leri
-    incident/           incident yaşam döngüsü, durum makinesi, yorumlar
-    correlation/         CorrelationEngine, Rule, threat-intel sağlayıcısı
-    ingestion/          POST /api/v1/events olay alım uç noktası
-    anomaly/            EWMA tabanlı latency anomali tespiti
-    realtime/           STOMP/WebSocket yapılandırması ve yayıncıları
-    security/           JWT auth, filtreler, rol tabanlı yetkilendirme
-    metrics/            Micrometer özel metrikleri
-    common/, config/    paylaşılan altyapı, DTO/mapper desteği, konfigürasyon
-
-network-ui/             Angular 21 standalone konsol (TypeScript, RxJS, STOMP.js)
-  src/app/
-    features/auth/      login ekranı
-    features/console/   SOC konsolu (devices, incidents, events, ...)
-    services/           HTTP + WebSocket servisleri, guard'lar, interceptor'lar
-
+    device/            device inventory, scanning, latency history
+    incident/          incident entity, state machine, comments
+    correlation/       CorrelationEngine, Rule, threat-intel provider
+    ingestion/         event ingestion API
+    anomaly/           EWMA latency baseline
+    realtime/          STOMP push (devices/incidents/metrics)
+    security/          JWT, RBAC, STOMP CONNECT auth, rate limiting
+    metrics/           Micrometer custom metrics
+    config/            security, WebSocket, scheduler-lock configuration
+    common/            shared DTOs, error handling (RFC 7807 ProblemDetail)
+  src/main/resources/db/migration/   Flyway migrations (V1 baseline .. V8)
+network-ui/            Angular frontend
+  src/app/features/    login, console (overview/devices/incidents/rules/logs)
+  src/app/services/    typed REST client, realtime (STOMP) service, auth
+  src/app/shared/      chart components, design tokens
+  e2e/                 Playwright smoke test
 docs/
-  adr/                  mimari karar kayıtları (ADR)
-  grafana/              içe aktarılabilir Grafana dashboard JSON'u
-  design/               tasarım token'ları (CSS custom properties)
-
-docker-compose.yml      postgres + backend + frontend + prometheus + grafana
-prometheus.yml          Prometheus scrape config
-.github/workflows/      CI pipeline (build, test, docker image, bağımlılık taraması)
+  adr/                 architecture decision records
+  grafana/             importable dashboard JSON
+docker-compose.yml     postgres + backend + frontend + prometheus + grafana
+prometheus.yml         scrape config
 ```
 
----
-
-## 🛠️ Teknoloji Yığını / Tech Stack
-
-Versions below are read directly from `demo/pom.xml` and `network-ui/package.json` — not assumed.
-
-**Backend**
-| Component | Version |
-|---|---|
-| Java | 26 (Temurin) |
-| Spring Boot | 4.1.0 |
-| Build tool | Maven (wrapper, `./mvnw`) |
-| Database | PostgreSQL 15 (via `spring-boot-starter-flyway` + `flyway-database-postgresql`) |
-| Dev fallback DB | H2 (in-memory, isolated `h2` profile) |
-| Entity ↔ DTO mapping | MapStruct 1.6.3 |
-| Scheduler locking | ShedLock 7.9.0 (JDBC-backed) |
-| Auth tokens | JJWT 0.13.0 |
-| Rate limiting | Bucket4j 8.19.0 (`bucket4j_jdk17-core`) |
-| Correlation window cache | Caffeine |
-| Observability | Spring Boot Actuator + Micrometer (Prometheus registry) |
-| Testing | JUnit 5, Mockito, Spring Security Test, MockMvc (`spring-boot-starter-webmvc-test`) |
-
-**Frontend**
-| Component | Version |
-|---|---|
-| Angular | 21.2 (standalone components) |
-| TypeScript | 5.9 |
-| RxJS | 7.8 |
-| Real-time transport | `@stomp/stompjs` 7.3 + `sockjs-client` 1.6 |
-| Test runner | Vitest 4, via Angular's own `@angular/build:unit-test` wrapper (`npm test` / `ng test` — **not** `npx vitest run` directly, which skips the zone.js/TestBed setup Angular wires in) |
-| Formatting | Prettier 3.8 (config present; not yet wired into a CI gate) |
-
-**Infrastructure**
-| Component | Version / Image |
-|---|---|
-| PostgreSQL | `postgres:15-alpine` |
-| Prometheus | `prom/prometheus:latest` |
-| Grafana | `grafana/grafana:latest` |
-| Frontend web server | `nginx:alpine` (multi-stage build serving the compiled Angular bundle) |
-
-> API documentation is available at `/swagger-ui.html` and `/v3/api-docs` (springdoc-openapi) once the backend is running. The curl examples below remain the quickest reference for scripting against the API.
-
----
-
-## ⚙️ Setup
-
-### Prerequisites
-- **JDK 26** (Temurin) — matches `demo/pom.xml`'s `<java.version>26</java.version>`. Running the build without it fails at the compile step with `release version 26 not supported`.
-- **Node.js 22.12+** (or 20.19+ / 24+) — the range `@angular/cli` itself declares (`engines.node`); anything outside it is not a supported combination for Angular 21's CLI.
-- **Docker** and **Docker Compose** (v2, the `docker compose` subcommand).
-
-### Run everything with Docker Compose
+## Getting started (Docker Compose)
 
 ```bash
-# 1. Create your local env file from the template and fill in real values
 cp .env.example .env
-# edit .env: POSTGRES_PASSWORD, JWT_SECRET (>= 32 bytes), SIEM_ADMIN_PASSWORD
+# edit .env: set a real POSTGRES_PASSWORD, JWT_SECRET (32+ bytes) and
+# SIEM_ADMIN_PASSWORD before anything but local experimentation
 
-# 2. Build and start the full stack
-docker compose up --build -d
-
-# 3. Check everything is up
-docker compose ps
+docker compose up --build
 ```
 
-Once the stack is up:
+| Service | URL |
+|---|---|
+| Console (frontend) | http://localhost |
+| Backend API | http://localhost:8080 |
+| Swagger UI | http://localhost:8080/swagger-ui.html |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3000 |
 
-| Service | URL | Notes |
-|---|---|---|
-| Console (frontend) | http://localhost | Angular app served by nginx; redirects to `/login` when unauthenticated |
-| Backend API | http://localhost:8080/api/v1/... | see [API examples](#-api-examples) below |
-| Backend metrics (Prometheus format) | http://localhost:8080/actuator/prometheus | intentionally left unauthenticated — reachable only inside the compose network, scraped by Prometheus |
-| Prometheus | http://localhost:9090 | scrapes the backend per `prometheus.yml` |
-| Grafana | http://localhost:3000 | default `admin`/`admin` on first login; import `docs/grafana/siem-dashboard.json` to get the pre-built SIEM dashboard |
+On first boot the backend bootstraps an `admin` account using
+`SIEM_ADMIN_PASSWORD` (falls back to `changeme-on-first-login` if unset — do
+not leave that default in anything but a throwaway local run).
 
-The application bootstraps a single `admin` account (`Role.ADMIN`) on first startup if the user table is empty, using `SIEM_ADMIN_PASSWORD` from your `.env` — change it before any real use, the compose file falls back to a well-known development-only value if it's left unset.
+## Local development
 
-### Run backend and frontend locally (without Docker)
+Running the two halves without Docker (useful for fast iteration or the e2e
+suite) uses the self-contained `h2` profile, so no database container is
+needed:
 
 ```bash
-# Backend — needs a reachable PostgreSQL (either the compose siem-db
-# service published on a host port, or point SPRING_DATASOURCE_URL at your own)
+# backend — requires JDK 26
 cd demo
-./mvnw spring-boot:run
+./mvnw spring-boot:run -Dspring-boot.run.profiles=h2
 
-# Frontend
+# frontend, in a second terminal
 cd network-ui
 npm ci
-npm start
+npm start   # ng serve, http://localhost:4200
 ```
 
----
+The `h2` profile seeds nine demo devices and creates the `admin` /
+`changeme-on-first-login` account automatically, since the in-memory
+database is empty on every start.
 
-## 📡 API Examples
+A profile **must** be selected explicitly (`h2` or `postgres`) — the two use
+different SQL dialects for their Flyway migrations, and there is currently no
+default fallback.
 
-All examples below use endpoints and request/response shapes read directly from the current controller and record definitions (`AuthController`, `IncidentController`, `IngestionController`) — not invented.
+## API overview
 
-### Authenticate
+All endpoints are versioned under `/api/v1/**` except the original device
+CRUD/simulator endpoints, which predate the `v1` API and still live at
+`/api/devices/**`. Errors are returned as
+[RFC 7807](https://www.rfc-editor.org/rfc/rfc7807) `ProblemDetail` documents.
+
+| Endpoint | Method | Role | Notes |
+|---|---|---|---|
+| `/api/v1/auth/login`, `/api/v1/auth/refresh` | POST | public | issues/renews JWT access+refresh tokens |
+| `/api/v1/devices` | GET, POST | any authenticated | filterable/paged device list |
+| `/api/v1/devices/{id}/latency` | GET | any authenticated | latency history, `limit` 1–1000, default 100 |
+| `/api/v1/incidents` | GET, POST | any authenticated | filter by status/severity |
+| `/api/v1/incidents/{id}/transition` | POST | `ANALYST`, `ADMIN` | one lifecycle step at a time |
+| `/api/v1/incidents/{id}/comments` | GET, POST | GET: any · POST: `ANALYST`, `ADMIN` | analyst notes on an incident |
+| `/api/v1/events` | POST, GET | any authenticated | rate-limited ingestion (~20 req/s/IP) |
+| `/api/v1/rules` | GET, POST, PUT, DELETE | GET: any · writes: `ADMIN` | correlation rule CRUD |
+| `/api/devices`, `/api/devices/{id}/attack`, `/api/devices/{id}/ssh-bruteforce` | various | `ANALYST`, `ADMIN` (mutations) | original device management + built-in attack simulator |
+
+Full request/response shapes are in the OpenAPI schema at
+`/v3/api-docs` / Swagger UI (`/swagger-ui.html`) once the backend is running.
 
 ```bash
+# Log in and call a protected endpoint
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"<your SIEM_ADMIN_PASSWORD>"}'
-```
 
-Response (`TokenResponse`):
-
-```json
-{
-  "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
-  "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
-  "expiresIn": 900
-}
-```
-
-`expiresIn` is the access token's lifetime in seconds (default 15 minutes, configurable via `siem.jwt.access-token-ttl`). A rejected login — unknown user, wrong password, or a bad refresh token at `/api/v1/auth/refresh` — always answers with the same 401 `INVALID_CREDENTIALS` problem document, deliberately not distinguishing which.
-
-### List open incidents (authenticated)
-
-```bash
-curl http://localhost:8080/api/v1/incidents?status=OPEN \
+curl http://localhost:8080/api/v1/incidents \
   -H "Authorization: Bearer <accessToken>"
 ```
 
-### Acknowledge an incident (requires ANALYST or ADMIN role)
+## Real-time channel
 
-```bash
-curl -X POST http://localhost:8080/api/v1/incidents/1/transition \
-  -H "Authorization: Bearer <accessToken>" \
-  -H "Content-Type: application/json" \
-  -d '{"newStatus":"ACKNOWLEDGED"}'
-```
+The frontend connects over SockJS to `/ws-siem` and subscribes to STOMP
+topics; the bearer token travels as a STOMP `CONNECT` header (browsers can't
+attach a normal `Authorization` header to a WebSocket handshake), and the
+server refuses the CONNECT frame outright if that token is missing or invalid
+— there is no anonymous subscription to any topic.
 
-An illegal transition (e.g. straight to `CLOSED` from `OPEN`) is rejected with a 409 problem document; a caller without `ANALYST`/`ADMIN` gets a 403.
-
-### Submit a normalized security event for correlation
-
-```bash
-curl -X POST http://localhost:8080/api/v1/events \
-  -H "Authorization: Bearer <accessToken>" \
-  -H "Content-Type: application/json" \
-  -d '{
-        "source": "edge-firewall-01",
-        "category": "AUTH_FAILURE",
-        "severity": "HIGH",
-        "rawPayload": "Failed SSH login for root from 203.0.113.7"
-      }'
-```
-
-`severity` and `occurredAt` are optional — they default to `INFO` and the moment of receipt respectively. The event is persisted first and evaluated by the correlation engine second, so a correlation failure never costs the stored evidence.
-
-### Manage correlation rules (list is open to any authenticated role, writes require ADMIN)
-
-```bash
-curl http://localhost:8080/api/v1/rules \
-  -H "Authorization: Bearer <accessToken>"
-
-curl -X POST http://localhost:8080/api/v1/rules \
-  -H "Authorization: Bearer <adminAccessToken>" \
-  -H "Content-Type: application/json" \
-  -d '{
-        "name": "Same-subnet simultaneous outage",
-        "enabled": true,
-        "conditionJson": "{\"type\":\"subnet_outage\",\"downStatuses\":[\"INACTIVE\"],\"prefixOctets\":3}",
-        "thresholdCount": 3,
-        "windowSeconds": 300,
-        "severity": "HIGH"
-      }'
-```
-
-Rules are data (rows in the `correlation_rule` table, including the built-in seeded ones), never hardcoded logic — this endpoint is the only place outside a migration or the seed that writes them. `conditionJson` always carries a `type` discriminator (`flap`, `subnet_outage`, `latency_anomaly`, `event_burst`); `thresholdCount` and `windowSeconds` are the shared "how many, over what period" parameters every type uses.
-
----
-
-## 🔐 Roles
-
-| Role | Can do |
+| Topic | Payload |
 |---|---|
-| `VIEWER` | Read devices, incidents, events, metrics, correlation rules |
-| `ANALYST` | Everything `VIEWER` can, plus acknowledge/transition incidents and add comments |
-| `ADMIN` | Everything `ANALYST` can, plus create/update/delete correlation rules and other administrative actions |
+| `/topic/devices` | device status/latency change |
+| `/topic/incidents` | incident created/transitioned |
+| `/topic/metrics` | live scan duration / open-incident / ingest-rate snapshot |
 
-Angular route guards and role-based UI hiding are a UX convenience only — the real boundary is the backend's method-level `@PreAuthorize`.
+If the socket can't be (re-)established after repeated backoff attempts, the
+console falls back to REST polling rather than silently going stale.
+
+## Testing
+
+```bash
+# backend — unit + Testcontainers-backed integration tests
+cd demo && ./mvnw verify
+
+# frontend — unit tests (via Angular's own test builder, not raw Vitest)
+cd network-ui && npm test
+
+# frontend — build
+cd network-ui && npx ng build
+
+# end-to-end smoke test (starts both the backend and the dev server itself)
+cd network-ui && npm run e2e
+```
+
+The Playwright suite covers the spec's required smoke path: log in, register
+a device, and acknowledge an incident, against a real running instance of
+both halves.
+
+## CI/CD
+
+`.github/workflows/ci.yml` runs on every push/PR to `main`:
+
+- **build-backend** — `mvnw verify` (JUnit 5 + Mockito + Testcontainers)
+- **build-frontend** — `npm ci`, unit tests, production build
+- **lint** — Spotless format check (backend) and ESLint (frontend,
+  non-blocking today — see the note in the workflow file)
+- **docker-build** — builds both application images and validates
+  `docker-compose.yml`
+- **dependency-scan** — OWASP Dependency-Check and `npm audit`, both
+  informational
+
+## Monitoring
+
+Micrometer metrics are exposed at `/actuator/prometheus` and scraped by the
+bundled Prometheus service. `docs/grafana/siem-dashboard.json` is an
+importable Grafana dashboard covering scan duration, open incidents, and
+event ingest rate.
+
+## Architecture decisions
+
+Larger, harder-to-reverse choices are recorded under `docs/adr/`:
+
+- [0001 — Use PostgreSQL](docs/adr/0001-use-postgresql.md)
+- [0002 — WebSocket/STOMP for real-time updates](docs/adr/0002-websocket-stomp-for-realtime.md)
+- [0003 — Visual identity ("tactical telemetry")](docs/adr/0003-visual-identity-tactical-telemetry.md)
+
+## Security notes
+
+- Change `SIEM_ADMIN_PASSWORD`, `POSTGRES_PASSWORD` and `JWT_SECRET` before
+  running this anywhere reachable by anyone but you — the values in
+  `.env.example` are placeholders, not defaults meant for real use.
+- Method-level `@PreAuthorize` on the backend is the actual security
+  boundary; anything the frontend hides or disables based on role is a
+  convenience only.
+- `/actuator/prometheus` is intentionally left unauthenticated — it is only
+  reachable from Prometheus over the private `docker-compose` network, never
+  a public interface. Revisit this if that network assumption ever changes.
 
 ---
 
-## 🖼️ Screenshots
-
-<!-- TODO: screenshot of the Overview / KPI dashboard -->
-<!-- TODO: screenshot of the Devices table with the latency detail drawer -->
-<!-- TODO: screenshot of the Incidents view showing a state transition -->
-<!-- TODO: screenshot of the live Events stream -->
-<!-- TODO: screenshot of the imported Grafana dashboard -->
-
----
-
-## 📖 Further reading / ADRs
-
-- [`docs/adr/0001-use-postgresql.md`](docs/adr/0001-use-postgresql.md) — why PostgreSQL over the original H2 setup
-- [`docs/adr/0002-websocket-stomp-for-realtime.md`](docs/adr/0002-websocket-stomp-for-realtime.md) — why WebSocket/STOMP over RxJS polling
-- [`docs/adr/0003-visual-identity-tactical-telemetry.md`](docs/adr/0003-visual-identity-tactical-telemetry.md) — the dark SOC visual identity
-- [`docs/grafana/siem-dashboard.json`](docs/grafana/siem-dashboard.json) — importable Grafana dashboard for the metrics this console exposes
-
----
-
-👨‍💻 Geliştirici İletişim
-
-Ayberk Arda
-
-Software Developer | Computer Programming, Istanbul Kültür University (İKÜ)
+*Out of scope, by design: this project stays a single modular monolith — no
+message broker, no split into microservices.*
