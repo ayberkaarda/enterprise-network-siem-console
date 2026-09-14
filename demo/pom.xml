@@ -25,6 +25,13 @@
 		     com.bucket4j:bucket4j-core coordinate stopped at 8.10.1 and no longer
 		     receives releases. The _jdk17 line is the maintained one. -->
 		<bucket4j.version>8.19.0</bucket4j.version>
+		<!-- springdoc-openapi 2.x targets Spring Boot 3 / Spring Framework 6; it
+		     does not resolve against Boot 4.1's Spring Framework 7 baseline. 3.1.0
+		     is the line built for Boot 4 / Framework 7, verified against the
+		     versions actually on the classpath here rather than assumed. -->
+		<springdoc.version>3.1.0</springdoc.version>
+		<spotless.version>3.10.2</spotless.version>
+		<palantir-java-format.version>2.98.0</palantir-java-format.version>
 	</properties>
 
 	<dependencies>
@@ -142,10 +149,36 @@
 			<version>${bucket4j.version}</version>
 		</dependency>
 
+		<!-- OpenAPI şeması + Swagger UI. Sürüm Boot BOM'u tarafından yönetilmiyor
+		     (springdoc kendi Spring uyumluluk hattını sürer), bu yüzden burada
+		     açıkça sabitlenir; bkz. springdoc.version yorumu. -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc.version}</version>
+		</dependency>
+
 		<!-- Test Bağımlılıkları -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Gerçek bir PostgreSQL üzerinde Flyway migration'larının ve repository
+		     round-trip'lerinin doğrulandığı entegrasyon testleri için (bkz.
+		     src/test/java/.../integration). Testcontainers 2.x, JUnit 5 ve
+		     PostgreSQL modüllerini "testcontainers-" önekiyle yeniden adlandırdı
+		     (eski koordinatlar org.testcontainers:junit-jupiter /
+		     org.testcontainers:postgresql idi); sürüm Boot BOM'un import ettiği
+		     testcontainers-bom'dan gelir, burada ayrıca sabitlenmez. -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-postgresql</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<!-- MockMvc tabanlı web katmanı testleri (Spring Boot 4'te ayrı starter) -->
@@ -189,6 +222,27 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<!-- Kod formatlama. palantir-java-format 4 boslukla girintiler ve mevcut
+			     kodun stiline en yakin sonucu verir. spotless:check herhangi bir
+			     Maven fazina otomatik baglanmaz (bkz. asagidaki not); CI'da ayri bir
+			     adim olarak `./mvnw spotless:check` cagrilir, formatlamak icin
+			     `./mvnw spotless:apply`. -->
+			<plugin>
+				<groupId>com.diffplug.spotless</groupId>
+				<artifactId>spotless-maven-plugin</artifactId>
+				<version>${spotless.version}</version>
+				<configuration>
+					<java>
+						<palantirJavaFormat>
+							<version>${palantir-java-format.version}</version>
+						</palantirJavaFormat>
+						<removeUnusedImports/>
+						<importOrder/>
+						<endWithNewline/>
+						<trimTrailingWhitespace/>
+					</java>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
