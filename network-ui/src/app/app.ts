@@ -166,27 +166,29 @@ export class App implements OnInit, OnDestroy {
     return Math.round(sum / activeWithLatency.length);
   }
 
-  get threatLevel() {
+  // Erişilemez cihaz oranı — tehdit bandının ve göstergesinin tek girdisi.
+  get threatRatio(): number {
+    if (this.totalDevices === 0) return 0;
+    return this.inactiveDevices / this.totalDevices;
+  }
+
+  // Tehdit seviyesi: eşikler ve anlamlar aynı, sunum sınıfa (band) taşındı.
+  get threatLevel(): { band: string; label: string; detail: string } {
     if (this.totalDevices === 0)
-      return { status: 'GÜVENLİ (YÜKSÜZ)', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.2)' };
-    const downRatio = this.inactiveDevices / this.totalDevices;
+      return { band: 'idle', label: 'GÜVENLİ', detail: 'Sistemde kayıtlı cihaz yok' };
+    const downRatio = this.threatRatio;
     if (downRatio >= 0.5)
-      return {
-        status: 'KRİTİK (TEHDİT SEVİYESİ YÜKSEK)',
-        color: '#ef4444',
-        bg: 'rgba(239, 68, 68, 0.2)',
-      };
-    if (downRatio > 0)
-      return {
-        status: 'UYARI (KISMİ ERİŞİM SORUNU)',
-        color: '#f59e0b',
-        bg: 'rgba(245, 158, 11, 0.2)',
-      };
-    return {
-      status: 'GÜVENLİ (STABİL EKO-SİSTEM)',
-      color: '#22c55e',
-      bg: 'rgba(34, 197, 94, 0.2)',
-    };
+      return { band: 'severe', label: 'KRİTİK', detail: 'Tehdit seviyesi yüksek' };
+    if (downRatio > 0) return { band: 'high', label: 'UYARI', detail: 'Kısmi erişim sorunu' };
+    return { band: 'nominal', label: 'GÜVENLİ', detail: 'Stabil eko-sistem' };
+  }
+
+  // Segmentli tehdit göstergesi (24 bölme) — yalnızca görselleştirme.
+  readonly meterSegments: number[] = Array.from({ length: 24 }, (_, i) => i);
+
+  get meterLit(): number {
+    if (this.totalDevices === 0) return 0;
+    return Math.max(1, Math.round(this.threatRatio * this.meterSegments.length));
   }
 
   exportLogsAsTxt() {

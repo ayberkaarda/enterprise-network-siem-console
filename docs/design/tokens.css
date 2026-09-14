@@ -2,6 +2,8 @@
  * Design tokens for the SOC console visual identity.
  * See docs/adr/0003-visual-identity-tactical-telemetry.md for rationale.
  * Dark-only by design — no light-theme variant is defined.
+ * Canonical source of truth; network-ui/src/styles/tokens.css mirrors this
+ * file verbatim and must be kept in sync if either changes.
  */
 
 :root {
@@ -10,6 +12,8 @@
   --color-surface: #14181B;
   --color-surface-2: #1A2024;
   --color-surface-3: #212930;
+  --color-line: #262E33;
+  --color-line-strong: #3A454C;
 
   /* Text */
   --color-text: #E4EAE7;
@@ -18,6 +22,7 @@
 
   /* Accent — selection, focus, active nav, primary buttons. Nothing else. */
   --color-accent: #EFE7D3;
+  --color-accent-ink: #0D1012;
 
   /* Severity — status only, never chrome */
   --color-severity-critical: #FF4D6D;
@@ -29,14 +34,39 @@
   /* Device / system health — separate meaning from severity */
   --color-ok: #4FD08A;
 
+  /* Tinted grounds for severity chips (derived, no new literals) */
+  --tint-critical: color-mix(in oklab, var(--color-severity-critical) 14%, var(--color-surface));
+  --tint-high: color-mix(in oklab, var(--color-severity-high) 14%, var(--color-surface));
+  --tint-medium: color-mix(in oklab, var(--color-severity-medium) 12%, var(--color-surface));
+  --tint-low: color-mix(in oklab, var(--color-severity-low) 14%, var(--color-surface));
+  --tint-info: color-mix(in oklab, var(--color-severity-info) 12%, var(--color-surface));
+  --tint-ok: color-mix(in oklab, var(--color-ok) 12%, var(--color-surface));
+
   /* Typography */
   --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
   --font-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.75rem;
+
+  /* Spacing, 4px step */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
 
   /* Layout */
   --rail-width: 216px;
   --row-height: 34px;
   --radius: 2px;
   --breakpoint-collapse: 820px;
+  --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
 }

@@ -1,0 +1,75 @@
+/* ==========================================================================
+   DESIGN TOKENS — dark-only SOC console identity.
+   This is the ONLY file in the frontend that may contain raw colour
+   literals. Everything else references these custom properties.
+   Values are mirrored from docs/design/tokens.css, which stays the
+   canonical source; the extras below (line colours, tints, type scale,
+   spacing step) are the additions the console shell needs.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* --- surfaces: gunmetal with a cool green-grey bias --- */
+  --color-bg: #0d1012;
+  --color-surface: #14181b;
+  --color-surface-2: #1a2024;
+  --color-surface-3: #212930;
+  --color-line: #262e33;
+  --color-line-strong: #3a454c;
+
+  /* --- ink --- */
+  --color-text: #e4eae7;
+  --color-text-secondary: #9aa8a4;
+  --color-text-tertiary: #64716e;
+
+  /* --- accent: selection, focus, active nav, primary action. Nothing else. --- */
+  --color-accent: #efe7d3;
+  --color-accent-ink: #0d1012;
+
+  /* --- severity: status meaning only, never chrome --- */
+  --color-severity-critical: #ff4d6d;
+  --color-severity-high: #ff9f45;
+  --color-severity-medium: #f5d65b;
+  --color-severity-low: #6ca6ff;
+  --color-severity-info: #8e9ba6;
+
+  /* --- device / system health: a separate meaning from severity --- */
+  --color-ok: #4fd08a;
+
+  /* --- tinted grounds for severity chips (derived, no new literals) --- */
+  --tint-critical: color-mix(in oklab, var(--color-severity-critical) 14%, var(--color-surface));
+  --tint-high: color-mix(in oklab, var(--color-severity-high) 14%, var(--color-surface));
+  --tint-medium: color-mix(in oklab, var(--color-severity-medium) 12%, var(--color-surface));
+  --tint-low: color-mix(in oklab, var(--color-severity-low) 14%, var(--color-surface));
+  --tint-info: color-mix(in oklab, var(--color-severity-info) 12%, var(--color-surface));
+  --tint-ok: color-mix(in oklab, var(--color-ok) 12%, var(--color-surface));
+
+  /* --- typography --- */
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.75rem;
+
+  /* --- spacing, 4px step --- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  /* --- layout --- */
+  --rail-width: 216px;
+  --row-height: 34px;
+  --radius: 2px;
+  --breakpoint-collapse: 820px;
+  --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
+}
