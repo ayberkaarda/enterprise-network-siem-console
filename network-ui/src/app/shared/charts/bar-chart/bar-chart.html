@@ -1,0 +1,38 @@
+@if (data().length > 0) {
+  @if (orientation() === 'horizontal') {
+    <div class="bar-chart bar-chart-h">
+      @for (d of data(); track d) {
+        <div class="bar-row" [title]="d.label + ': ' + d.value + valueSuffix()">
+          <span class="bar-label mono">{{ d.label }}</span>
+          <span class="bar-track">
+            <span
+              class="bar-fill"
+              [style.width.%]="fillPercent(d)"
+              [style.background]="barColor(d)"
+            ></span>
+          </span>
+          <span class="bar-value mono">{{ d.value }}{{ valueSuffix() }}</span>
+        </div>
+      }
+    </div>
+  }
+  @if (orientation() === 'vertical') {
+    <div class="bar-chart bar-chart-v">
+      @for (d of data(); track d) {
+        <div class="bar-col" [title]="d.label + ': ' + d.value + valueSuffix()">
+          <span class="bar-col-value mono">{{ d.value }}</span>
+          <span class="bar-col-track">
+            <span
+              class="bar-col-fill"
+              [style.height.%]="fillPercent(d)"
+              [style.background]="barColor(d)"
+            ></span>
+          </span>
+          <span class="bar-col-label faint mono">{{ d.label }}</span>
+        </div>
+      }
+    </div>
+  }
+} @else {
+  <div class="bar-chart-empty faint mono">{{ emptyLabel() }}</div>
+}

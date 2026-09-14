@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -22,9 +22,9 @@ export interface AuditLog {
   providedIn: 'root',
 })
 export class DeviceService {
-  private apiUrl = 'http://localhost:8080/api/devices';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private apiUrl = 'http://localhost:8080/api/devices';
 
   // 1. Tüm cihazları getir
   getDevices(): Observable<Device[]> {

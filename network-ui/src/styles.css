@@ -214,6 +214,7 @@ code {
 .shell:has(#view-overview:target) .nav-item[href$='view-overview'],
 .shell:has(#view-devices:target) .nav-item[href$='view-devices'],
 .shell:has(#view-incidents:target) .nav-item[href$='view-incidents'],
+.shell:has(#view-rules:target) .nav-item[href$='view-rules'],
 .shell:has(#view-logs:target) .nav-item[href$='view-logs'] {
   color: var(--color-text);
   border-left-color: var(--color-accent);
@@ -1107,6 +1108,7 @@ th.r {
   .shell:has(#view-overview:target) .nav-item[href$='view-overview'],
   .shell:has(#view-devices:target) .nav-item[href$='view-devices'],
   .shell:has(#view-incidents:target) .nav-item[href$='view-incidents'],
+  .shell:has(#view-rules:target) .nav-item[href$='view-rules'],
   .shell:has(#view-logs:target) .nav-item[href$='view-logs'] {
     border-left-color: transparent;
     border-bottom-color: var(--color-accent);

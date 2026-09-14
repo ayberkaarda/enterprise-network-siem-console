@@ -1,0 +1,41 @@
+/* ==========================================================================
+   Rules CRUD screen. Layout only — colours all come from the shared
+   design system tokens through the existing .field/.btn/.sev classes.
+   ========================================================================== */
+
+.rule-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.rule-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--s-3);
+  align-items: end;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rule-toggle {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.rule-json {
+  min-height: 88px;
+  width: 100%;
+  resize: vertical;
+}
+
+.rule-form-actions {
+  display: flex;
+  gap: var(--s-2);
+}

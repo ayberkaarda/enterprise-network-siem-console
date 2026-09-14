@@ -80,6 +80,41 @@ export interface IncidentCommentRequest {
   body: string;
 }
 
+/* --------------------------------------------------------------------------
+   Correlation rules — /api/v1/rules
+
+   `conditionJson` is an opaque raw JSON string as far as the console is
+   concerned: the Rules screen edits it as text, the engine interprets it.
+   -------------------------------------------------------------------------- */
+
+/** GET /api/v1/rules content item. */
+export interface Rule {
+  id: number;
+  name: string;
+  enabled: boolean;
+  conditionJson: string;
+  thresholdCount: number;
+  windowSeconds: number;
+  severity: IncidentSeverity;
+  createdAt: string;
+}
+
+/** POST /api/v1/rules and PUT /api/v1/rules/{id} request body. */
+export interface RuleRequest {
+  name: string;
+  enabled: boolean;
+  conditionJson: string;
+  thresholdCount: number;
+  windowSeconds: number;
+  severity: IncidentSeverity;
+}
+
+/** GET /api/v1/devices/{id}/latency content item — flat array, not paginated. */
+export interface LatencySample {
+  latency: number;
+  recordedAt: string;
+}
+
 /** GET /api/v1/events content item. */
 export interface IngestedEvent {
   id: number;

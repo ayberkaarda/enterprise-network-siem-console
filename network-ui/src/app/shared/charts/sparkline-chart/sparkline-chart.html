@@ -1,0 +1,25 @@
+@if (points().length > 0) {
+  <div class="sparkline">
+    <svg
+      [attr.viewBox]="viewBox"
+      preserveAspectRatio="none"
+      class="sparkline-svg"
+      role="img"
+      [attr.aria-label]="
+        'Zaman serisi grafiği, son değer ' + (lastPoint()?.value ?? '—') + valueSuffix()
+      "
+    >
+      <path class="sparkline-area" [attr.d]="areaPath()" [style.fill]="strokeColor()"></path>
+      <path class="sparkline-line" [attr.d]="linePath()" [style.stroke]="strokeColor()"></path>
+    </svg>
+    <div class="sparkline-stats mono">
+      <span>min {{ minValue() }}{{ valueSuffix() }}</span>
+      <span>maks {{ maxValue() }}{{ valueSuffix() }}</span>
+      @if (lastPoint(); as last) {
+        <span>son {{ last.value }}{{ valueSuffix() }}</span>
+      }
+    </div>
+  </div>
+} @else {
+  <div class="sparkline-empty faint mono">{{ emptyLabel() }}</div>
+}

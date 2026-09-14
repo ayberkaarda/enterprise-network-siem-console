@@ -11,8 +11,11 @@ import {
   IncidentStatus,
   IncidentTransitionRequest,
   IngestedEvent,
+  LatencySample,
   Page,
   ProblemDetail,
+  Rule,
+  RuleRequest,
 } from './siem.models';
 
 /**
@@ -42,6 +45,12 @@ export interface DeviceQuery {
 }
 
 export interface EventQuery {
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
+export interface RuleQuery {
   page?: number;
   size?: number;
   sort?: string;
@@ -91,6 +100,33 @@ export class SiemApiService {
       params: toParams(query),
     });
   }
+
+  /** Chronologically ascending latency samples for one device. ADMIN/ANALYST/VIEWER alike. */
+  getDeviceLatency(deviceId: number, limit = 100): Observable<LatencySample[]> {
+    return this.http.get<LatencySample[]>(`${this.apiUrl}/devices/${deviceId}/latency`, {
+      params: toParams({ limit }),
+    });
+  }
+
+  /** Listing is open to any authenticated role; write endpoints below are ADMIN only. */
+  getRules(query: RuleQuery = {}): Observable<Page<Rule>> {
+    return this.http.get<Page<Rule>>(`${this.apiUrl}/rules`, { params: toParams(query) });
+  }
+
+  /** 403 INSUFFICIENT_ROLE for anything but ADMIN. */
+  createRule(rule: RuleRequest): Observable<Rule> {
+    return this.http.post<Rule>(`${this.apiUrl}/rules`, rule);
+  }
+
+  /** 403 INSUFFICIENT_ROLE for anything but ADMIN; 404 RULE_NOT_FOUND for a missing id. */
+  updateRule(id: number, rule: RuleRequest): Observable<Rule> {
+    return this.http.put<Rule>(`${this.apiUrl}/rules/${id}`, rule);
+  }
+
+  /** 403 INSUFFICIENT_ROLE for anything but ADMIN. */
+  deleteRule(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/rules/${id}`);
+  }
 }
 
 function toParams(query: object): HttpParams {
@@ -111,6 +147,7 @@ function toParams(query: object): HttpParams {
 const ERROR_CODE_MESSAGES: Readonly<Record<string, string>> = {
   INVALID_STATE_TRANSITION: 'Bu durum geçişi olay yaşam döngüsünde geçerli değil.',
   INCIDENT_NOT_FOUND: 'Olay kaydı bulunamadı; liste yenilenmeli.',
+  RULE_NOT_FOUND: 'Kural bulunamadı; liste yenilenmeli.',
   VALIDATION_ERROR: 'Gönderilen veri doğrulamadan geçmedi.',
   FORBIDDEN: 'Bu işlem için yetkiniz yok.',
   INVALID_CREDENTIALS: 'Kullanıcı adı veya parola hatalı.',

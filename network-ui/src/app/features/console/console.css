@@ -193,3 +193,45 @@
   color: var(--color-text-secondary);
   overflow-wrap: anywhere;
 }
+
+/* --------------------------------------------------------------------------
+   Overview analytics: three derived charts side by side, one column below
+   the sidebar breakpoint.
+   -------------------------------------------------------------------------- */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--s-5);
+}
+
+.analytics-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* --------------------------------------------------------------------------
+   Per-device latency history, expanded inline below the device row.
+   -------------------------------------------------------------------------- */
+.latency-drawer {
+  padding: var(--s-3) var(--s-2);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  white-space: normal;
+}
+
+.latency-drawer-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+}
+
+.latency-drawer-head h4 {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text);
+}

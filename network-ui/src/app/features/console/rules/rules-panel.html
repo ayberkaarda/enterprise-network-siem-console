@@ -1,0 +1,214 @@
+<div class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">Korelasyon Kuralları</h2>
+    <div class="panel-actions">
+      <span class="label">DB'den okunur · motor bu kayıtları kullanır</span>
+      @if (!canManage) {
+        <span class="sev sev-info" [title]="roleHint">salt okunur · ADMIN gerekir</span>
+      }
+      <button (click)="loadRules()" class="btn btn-sm" type="button">Yenile</button>
+      <button
+        (click)="startCreate()"
+        class="btn btn-sm btn-primary"
+        type="button"
+        [disabled]="!canManage || isEditing"
+        [title]="roleHint"
+      >
+        Yeni Kural
+      </button>
+    </div>
+  </div>
+
+  @if (listError) {
+    <div class="panel-body">
+      <p class="inline-error" role="alert">{{ listError }}</p>
+    </div>
+  }
+
+  @if (isEditing) {
+    <form class="panel-body rule-form" (ngSubmit)="submit()">
+      <div class="rule-form-grid">
+        <label class="field-group">
+          <span class="label">Kural Adı</span>
+          <input
+            type="text"
+            [(ngModel)]="formName"
+            name="ruleName"
+            class="field"
+            [disabled]="!canManage"
+            placeholder="ör. Ardışık cihaz flap"
+            aria-label="Kural adı"
+          />
+        </label>
+        <label class="field-group">
+          <span class="label">Şiddet</span>
+          <span class="select">
+            <select
+              [(ngModel)]="formSeverity"
+              name="ruleSeverity"
+              class="field"
+              [disabled]="!canManage"
+              aria-label="Şiddet"
+            >
+              @for (sev of severities; track sev) {
+                <option [value]="sev">{{ sev }}</option>
+              }
+            </select>
+          </span>
+        </label>
+        <label class="field-group">
+          <span class="label">Eşik (adet)</span>
+          <input
+            type="number"
+            min="1"
+            [(ngModel)]="formThresholdCount"
+            name="ruleThreshold"
+            class="field"
+            [disabled]="!canManage"
+            aria-label="Eşik adedi"
+          />
+        </label>
+        <label class="field-group">
+          <span class="label">Pencere (sn)</span>
+          <input
+            type="number"
+            min="1"
+            [(ngModel)]="formWindowSeconds"
+            name="ruleWindow"
+            class="field"
+            [disabled]="!canManage"
+            aria-label="Pencere süresi (saniye)"
+          />
+        </label>
+        <label class="field-group rule-toggle">
+          <input
+            type="checkbox"
+            [(ngModel)]="formEnabled"
+            name="ruleEnabled"
+            [disabled]="!canManage"
+          />
+          <span class="label">Etkin</span>
+        </label>
+      </div>
+      <label class="field-group">
+        <span class="label">Koşul JSON</span>
+        <textarea
+          [(ngModel)]="formConditionJson"
+          name="ruleCondition"
+          class="field rule-json"
+          rows="4"
+          [disabled]="!canManage"
+          aria-label="Koşul JSON"
+          spellcheck="false"
+        ></textarea>
+      </label>
+      @if (formError) {
+        <p class="inline-error" role="alert">{{ formError }}</p>
+      }
+      <div class="rule-form-actions">
+        <button
+          type="submit"
+          class="btn btn-sm btn-primary"
+          [disabled]="!canManage || submitting"
+          [title]="roleHint"
+        >
+          {{
+            submitting ? 'KAYDEDİLİYOR…' : isCreating ? 'Kuralı Oluştur' : 'Değişiklikleri Kaydet'
+          }}
+        </button>
+        <button type="button" class="btn btn-sm" (click)="cancelEdit()">Vazgeç</button>
+      </div>
+    </form>
+  }
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Ad</th>
+          <th>Etkin</th>
+          <th>Şiddet</th>
+          <th class="r">Eşik / Pencere</th>
+          <th>Oluşturulma</th>
+          <th>Aksiyonlar</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (rule of rules; track rule) {
+          <tr>
+            <td class="mono dev-name">{{ rule.name }}</td>
+            <td>
+              <button
+                class="btn btn-sm"
+                [class.btn-primary]="rule.enabled"
+                type="button"
+                (click)="toggleEnabled(rule)"
+                [disabled]="!canManage"
+                [title]="roleHint"
+              >
+                {{ rule.enabled ? 'AÇIK' : 'KAPALI' }}
+              </button>
+            </td>
+            <td>
+              <span class="sev" [ngClass]="severityClass(rule.severity)">{{ rule.severity }}</span>
+            </td>
+            <td class="r mono">{{ rule.thresholdCount }} / {{ rule.windowSeconds }}sn</td>
+            <td class="mono faint">{{ rule.createdAt | date: 'dd.MM.yyyy HH:mm' }}</td>
+            <td>
+              <div class="row-actions">
+                <button
+                  (click)="startEdit(rule)"
+                  class="btn btn-sm"
+                  type="button"
+                  [disabled]="!canManage"
+                  [title]="roleHint"
+                >
+                  Düzenle
+                </button>
+                <button
+                  (click)="deleteRule(rule)"
+                  class="btn btn-sm btn-danger"
+                  type="button"
+                  [disabled]="!canManage || pendingDeleteId === rule.id"
+                  [title]="roleHint"
+                >
+                  {{ pendingDeleteId === rule.id ? 'SİLİNİYOR…' : 'Sil' }}
+                </button>
+              </div>
+              @if (rowError[rule.id]) {
+                <p class="inline-error" role="alert">
+                  <span>{{ rowError[rule.id] }}</span>
+                  <button class="btn btn-sm" type="button" (click)="dismissRowError(rule.id)">
+                    Kapat
+                  </button>
+                </p>
+              }
+            </td>
+          </tr>
+        }
+        @if (rules.length === 0) {
+          <tr>
+            <td colspan="6">
+              @if (loaded) {
+                <div class="state-box">
+                  <div class="glyph">[ 0 ]</div>
+                  <h4>Kural kaydı yok</h4>
+                  <p>
+                    Korelasyon motoru şu anda hiçbir kural kullanmıyor.
+                    {{ canManage ? 'Yeni Kural ile ilk kuralı ekleyin.' : '' }}
+                  </p>
+                </div>
+              } @else {
+                <div class="state-box">
+                  <div class="glyph">[ … ]</div>
+                  <h4>Kurallar yükleniyor</h4>
+                  <p>Sunucudan kural kayıtları okunuyor.</p>
+                </div>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
