@@ -1,6 +1,7 @@
 package com.example.demo.correlation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +24,7 @@ import com.example.demo.ingestion.IngestedEvent;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -331,6 +334,299 @@ class CorrelationEngineTest {
         assertThat(CorrelationEngine.subnetPrefix("10.0.5.11", 2)).isEqualTo("10.0.");
         assertThat(CorrelationEngine.subnetPrefix("10.0", 3)).isNull();
         assertThat(CorrelationEngine.subnetPrefix(null, 3)).isNull();
+    }
+
+    @Test
+    void subnetPrefixRejectsZeroOctetsAndEmptySegments() {
+        assertThat(CorrelationEngine.subnetPrefix("10.0.5.11", 0)).isNull();
+        assertThat(CorrelationEngine.subnetPrefix("10..5.11", 3)).isNull();
+    }
+
+    // ------------------------------------------------------ rule compilation
+
+    @Test
+    void rulesWithNullMissingOrBlankConditionTypeAreNeverActivated() {
+        loadRules(
+                rule(1L, "No condition at all", null, 1, 60, Severity.LOW),
+                rule(2L, "No type key", "{}", 1, 60, Severity.LOW),
+                rule(3L, "Blank type", "{\"type\":\"\"}", 1, 60, Severity.LOW));
+
+        assertThat(engine.activeRuleCount()).isZero();
+    }
+
+    // ---------------------------------------------------------- device path
+
+    @Test
+    void onDeviceEventIgnoresANullEventAndADeviceWithoutAnId() {
+        assertThatCode(() -> engine.onDeviceEvent(null)).doesNotThrowAnyException();
+
+        Device deviceWithoutId = device(null, "unregistered", "10.0.0.99");
+        engine.onDeviceEvent(statusChange(deviceWithoutId, "UNKNOWN", "ACTIVE", 5L));
+
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    void aFailingRuleEvaluationIsLoggedAndDoesNotStopTheOtherRules() {
+        loadRules(rule(1L, "Device flapping", "{\"type\":\"flap\"}", 3, 300, Severity.MEDIUM));
+        when(incidentService.create(anyString(), anyString(), any(), any(), any()))
+                .thenThrow(new IllegalStateException("incident store unavailable"));
+        Device device = device(7L, "core-switch", "10.0.5.11");
+
+        assertThatCode(() -> {
+                    engine.onDeviceEvent(statusChange(device, "ACTIVE", "INACTIVE", 12L));
+                    clock.advance(Duration.ofSeconds(30));
+                    engine.onDeviceEvent(statusChange(device, "INACTIVE", "ACTIVE", 12L));
+                    clock.advance(Duration.ofSeconds(30));
+                    engine.onDeviceEvent(statusChange(device, "ACTIVE", "INACTIVE", 12L));
+                })
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void describeFallsBackToTheDeviceIdWhenTheNameIsMissing() {
+        loadRules(rule(1L, "Device flapping", "{\"type\":\"flap\"}", 3, 300, Severity.MEDIUM));
+        Device device = device(7L, null, "10.0.5.11");
+
+        engine.onDeviceEvent(statusChange(device, "ACTIVE", "INACTIVE", 12L));
+        clock.advance(Duration.ofSeconds(30));
+        engine.onDeviceEvent(statusChange(device, "INACTIVE", "ACTIVE", 12L));
+        clock.advance(Duration.ofSeconds(30));
+        engine.onDeviceEvent(statusChange(device, "ACTIVE", "INACTIVE", 12L));
+
+        ArgumentCaptor<String> title = ArgumentCaptor.forClass(String.class);
+        verify(incidentService, times(1)).create(title.capture(), anyString(), any(), eq(7L), any());
+        assertThat(title.getValue()).contains("device 7");
+    }
+
+    @Test
+    void aRuleWithoutAnExplicitSeverityDefaultsToMedium() {
+        loadRules(rule(1L, "Device flapping", "{\"type\":\"flap\"}", 3, 300, null));
+        Device device = device(7L, "core-switch", "10.0.5.11");
+
+        engine.onDeviceEvent(statusChange(device, "ACTIVE", "INACTIVE", 12L));
+        clock.advance(Duration.ofSeconds(30));
+        engine.onDeviceEvent(statusChange(device, "INACTIVE", "ACTIVE", 12L));
+        clock.advance(Duration.ofSeconds(30));
+        engine.onDeviceEvent(statusChange(device, "ACTIVE", "INACTIVE", 12L));
+
+        verify(incidentService, times(1)).create(anyString(), anyString(), eq(Severity.MEDIUM), eq(7L), any());
+    }
+
+    @Test
+    void aRepeatedFlapIsAllowedToFireAgainOnceTheWindowHasFullyElapsed() {
+        loadRules(rule(1L, "Device flapping", "{\"type\":\"flap\"}", 3, 300, Severity.MEDIUM));
+        Device device = device(7L, "core-switch", "10.0.5.11");
+
+        engine.onDeviceEvent(statusChange(device, "ACTIVE", "INACTIVE", 12L));
+        clock.advance(Duration.ofSeconds(30));
+        engine.onDeviceEvent(statusChange(device, "INACTIVE", "ACTIVE", 12L));
+        clock.advance(Duration.ofSeconds(30));
+        engine.onDeviceEvent(statusChange(device, "ACTIVE", "INACTIVE", 12L));
+
+        clock.advance(Duration.ofSeconds(301));
+        engine.onDeviceEvent(statusChange(device, "INACTIVE", "ACTIVE", 12L));
+        clock.advance(Duration.ofSeconds(30));
+        engine.onDeviceEvent(statusChange(device, "ACTIVE", "INACTIVE", 12L));
+        clock.advance(Duration.ofSeconds(30));
+        engine.onDeviceEvent(statusChange(device, "INACTIVE", "ACTIVE", 12L));
+
+        verify(incidentService, times(2)).create(anyString(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void flapWindowNeverTracksMoreThanTheCapForAVeryChattyDevice() {
+        // threshold set above the tracked-timestamp cap: if the window did not
+        // trim old entries the count would exceed it and the rule would fire.
+        loadRules(rule(1L, "Device flapping", "{\"type\":\"flap\"}", 130, 1_000, Severity.MEDIUM));
+        Device device = device(7L, "core-switch", "10.0.5.11");
+
+        for (int i = 0; i < 150; i++) {
+            engine.onDeviceEvent(statusChange(device, "ACTIVE", "INACTIVE", 12L));
+            clock.advance(Duration.ofSeconds(1));
+        }
+
+        verify(incidentService, never()).create(anyString(), anyString(), any(), any(), any());
+    }
+
+    // -------------------------------------------------- subnet outage extras
+
+    @Test
+    void subnetOutageIgnoresADeviceWithAnUnparseableIpAddress() {
+        loadRules(rule(
+                2L,
+                "Simultaneous subnet outage",
+                "{\"type\":\"subnet_outage\",\"downStatuses\":[\"INACTIVE\"],\"prefixOctets\":3}",
+                1,
+                120,
+                Severity.HIGH));
+
+        engine.onDeviceEvent(statusChange(device(41L, "unaddressed", "not-an-ip"), "ACTIVE", "INACTIVE", -1L));
+
+        verify(incidentService, never()).create(anyString(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void subnetOutageAgesOutHostsThatWentDownOutsideTheWindow() {
+        loadRules(rule(
+                2L,
+                "Simultaneous subnet outage",
+                "{\"type\":\"subnet_outage\",\"downStatuses\":[\"INACTIVE\"],\"prefixOctets\":3}",
+                3,
+                120,
+                Severity.HIGH));
+
+        engine.onDeviceEvent(statusChange(device(11L, "rack-a", "10.0.5.11"), "ACTIVE", "INACTIVE", -1L));
+        clock.advance(Duration.ofSeconds(130));
+        engine.onDeviceEvent(statusChange(device(12L, "rack-b", "10.0.5.12"), "ACTIVE", "INACTIVE", -1L));
+        clock.advance(Duration.ofSeconds(10));
+        engine.onDeviceEvent(statusChange(device(13L, "rack-c", "10.0.5.13"), "ACTIVE", "INACTIVE", -1L));
+
+        // rack-a aged out of the 120s window, so only two hosts are down: below threshold.
+        verify(incidentService, never()).create(anyString(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void subnetOutageDoesNotRepeatWithinTheSameWindow() {
+        loadRules(rule(
+                2L,
+                "Simultaneous subnet outage",
+                "{\"type\":\"subnet_outage\",\"downStatuses\":[\"INACTIVE\"],\"prefixOctets\":3}",
+                3,
+                120,
+                Severity.HIGH));
+
+        engine.onDeviceEvent(statusChange(device(11L, "rack-a", "10.0.5.11"), "ACTIVE", "INACTIVE", -1L));
+        engine.onDeviceEvent(statusChange(device(12L, "rack-b", "10.0.5.12"), "ACTIVE", "INACTIVE", -1L));
+        engine.onDeviceEvent(statusChange(device(13L, "rack-c", "10.0.5.13"), "ACTIVE", "INACTIVE", -1L));
+
+        clock.advance(Duration.ofSeconds(5));
+        engine.onDeviceEvent(statusChange(device(14L, "rack-d", "10.0.5.14"), "ACTIVE", "INACTIVE", -1L));
+        engine.onDeviceEvent(statusChange(device(15L, "rack-e", "10.0.5.15"), "ACTIVE", "INACTIVE", -1L));
+        engine.onDeviceEvent(statusChange(device(16L, "rack-f", "10.0.5.16"), "ACTIVE", "INACTIVE", -1L));
+
+        verify(incidentService, times(1)).create(anyString(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void subnetOutageFallsBackToTheDefaultDownStatusWhenTheConditionOmitsIt() {
+        loadRules(rule(2L, "Simultaneous subnet outage", "{\"type\":\"subnet_outage\",\"prefixOctets\":3}", 1, 120, Severity.HIGH));
+
+        engine.onDeviceEvent(statusChange(device(11L, "rack-a", "10.0.5.11"), "ACTIVE", "INACTIVE", -1L));
+
+        verify(incidentService, times(1)).create(anyString(), anyString(), eq(Severity.HIGH), any(), any());
+    }
+
+    // ------------------------------------------------- latency anomaly extras
+
+    @Test
+    void latencyAnomalyIgnoresAReadingWithoutALatencyValue() {
+        loadRules(
+                rule(3L, "Latency beyond device baseline", "{\"type\":\"latency_anomaly\"}", 1, 300, Severity.MEDIUM));
+        Device device = device(9L, "db-primary", "10.0.9.4");
+        for (int i = 0; i < 10; i++) {
+            latencyBaselineService.record(9L, 20L);
+        }
+
+        engine.onDeviceEvent(new DeviceStatusChangedEvent(device, "ACTIVE", "ACTIVE", null));
+
+        verify(incidentService, never()).create(anyString(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void latencyAnomalyDoesNotRepeatWithinTheSameWindow() {
+        loadRules(
+                rule(3L, "Latency beyond device baseline", "{\"type\":\"latency_anomaly\"}", 1, 300, Severity.MEDIUM));
+        Device device = device(9L, "db-primary", "10.0.9.4");
+        for (int i = 0; i < 10; i++) {
+            latencyBaselineService.record(9L, 20L);
+        }
+
+        engine.onDeviceEvent(statusChange(device, "ACTIVE", "ACTIVE", 900L));
+        clock.advance(Duration.ofSeconds(10));
+        engine.onDeviceEvent(statusChange(device, "ACTIVE", "ACTIVE", 950L));
+
+        verify(incidentService, times(1)).create(anyString(), anyString(), any(), eq(9L), any());
+    }
+
+    // --------------------------------------------------------- ingested path extras
+
+    @Test
+    void onIngestedEventIgnoresANullEventAndAnEventWithoutASource() {
+        assertThatCode(() -> engine.onIngestedEvent(null)).doesNotThrowAnyException();
+
+        engine.onIngestedEvent(ingested(null, "AUTH", Severity.MEDIUM));
+
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    void onIngestedEventSkipsRulesThatAreNotEventBurstRules() {
+        loadRules(rule(1L, "Device flapping", "{\"type\":\"flap\"}", 3, 300, Severity.MEDIUM));
+
+        assertThatCode(() -> engine.onIngestedEvent(ingested("10.0.0.15", "AUTH", Severity.LOW)))
+                .doesNotThrowAnyException();
+
+        verify(incidentService, never()).create(anyString(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void aFailingEventBurstEvaluationIsLoggedAndDoesNotPropagate() {
+        loadRules(rule(
+                4L, "Authentication burst", "{\"type\":\"event_burst\",\"category\":\"AUTH\"}", 1, 60, Severity.HIGH));
+        when(incidentService.create(anyString(), anyString(), any(), any(), any()))
+                .thenThrow(new IllegalStateException("incident store unavailable"));
+
+        assertThatCode(() -> engine.onIngestedEvent(ingested("10.0.0.15", "AUTH", Severity.LOW)))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void eventBurstRuleWithoutACategoryFilterMatchesAnyCategory() {
+        loadRules(rule(4L, "Any-category burst", "{\"type\":\"event_burst\"}", 2, 60, Severity.HIGH));
+
+        engine.onIngestedEvent(ingested("10.0.0.15", "AUTH", Severity.LOW));
+        engine.onIngestedEvent(ingested("10.0.0.15", "NETFLOW", Severity.LOW));
+
+        verify(incidentService, times(1)).create(anyString(), anyString(), eq(Severity.HIGH), any(), any());
+    }
+
+    @Test
+    void eventBurstRuleDoesNotRepeatWithinTheSameWindow() {
+        loadRules(rule(
+                4L, "Authentication burst", "{\"type\":\"event_burst\",\"category\":\"AUTH\"}", 2, 60, Severity.HIGH));
+
+        engine.onIngestedEvent(ingested("10.0.0.15", "AUTH", Severity.LOW));
+        engine.onIngestedEvent(ingested("10.0.0.15", "AUTH", Severity.LOW));
+        clock.advance(Duration.ofSeconds(5));
+        engine.onIngestedEvent(ingested("10.0.0.15", "AUTH", Severity.LOW));
+        engine.onIngestedEvent(ingested("10.0.0.15", "AUTH", Severity.LOW));
+
+        verify(incidentService, times(1)).create(anyString(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void threatIntelHitsAreAllowedToFireAgainAfterTheCooldownExpires() {
+        loadRules();
+
+        engine.onIngestedEvent(ingested("192.0.2.66", "AUTH", Severity.MEDIUM));
+        clock.advance(Duration.ofMinutes(16));
+        engine.onIngestedEvent(ingested("192.0.2.66", "AUTH", Severity.MEDIUM));
+
+        verify(incidentService, times(2)).create(anyString(), anyString(), eq(Severity.HIGH), any(), any());
+    }
+
+    // ------------------------------------------------------------ diagnostics
+
+    @Test
+    void stateSnapshotReflectsInMemoryWindowActivity() {
+        loadRules(rule(1L, "Device flapping", "{\"type\":\"flap\"}", 3, 300, Severity.MEDIUM));
+        engine.onDeviceEvent(statusChange(device(7L, "core-switch", "10.0.5.11"), "ACTIVE", "INACTIVE", 12L));
+
+        Map<String, Integer> snapshot = engine.stateSnapshot();
+
+        assertThat(snapshot).containsKeys("deviceStatusChanges", "subnetOutages", "sourceEvents");
+        assertThat(snapshot.get("deviceStatusChanges")).isEqualTo(1);
     }
 
     // ------------------------------------------------------------- fixtures

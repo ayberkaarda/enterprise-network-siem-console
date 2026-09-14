@@ -32,6 +32,7 @@
 		<springdoc.version>3.1.0</springdoc.version>
 		<spotless.version>3.10.2</spotless.version>
 		<palantir-java-format.version>2.98.0</palantir-java-format.version>
+		<jacoco.version>0.8.15</jacoco.version>
 	</properties>
 
 	<dependencies>
@@ -222,6 +223,50 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<!-- Test coverage measurement only. prepare-agent instruments the JVM
+			     during `initialize`, report renders target/site/jacoco/index.html
+			     (and jacoco.csv) after the test phase every `test`/`verify` run.
+			     No coverage threshold is enforced here on purpose: a failing build
+			     on a coverage floor is a separate, deliberate decision this change
+			     does not make. -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<executions>
+					<execution>
+						<id>jacoco-prepare-agent</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<configuration>
+							<!-- Measured: on this JDK (26, class file major version 70) the
+							     0.8.13 release (the newest on Maven Central at the time this
+							     was first wired up) could not parse our own compiled classes
+							     at all, since its bundled ASM predates Java 26. 0.8.15 (the
+							     version actually pinned above) fixed that, so this is no
+							     longer a workaround for a crash. It is kept anyway because,
+							     left unrestricted, the agent also tries to instrument JDK
+							     classes (java.net.http.* and its jdk.internal.net.http.*
+							     backing classes, loaded whenever a test exercises an HTTP
+							     client) that we do not own and do not want in the report;
+							     restricting instrumentation to our own package is what the
+							     JaCoCo docs recommend for exactly this case. -->
+							<includes>
+								<include>com/example/demo/**</include>
+							</includes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>jacoco-report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<!-- Kod formatlama. palantir-java-format 4 boslukla girintiler ve mevcut
 			     kodun stiline en yakin sonucu verir. spotless:check herhangi bir
