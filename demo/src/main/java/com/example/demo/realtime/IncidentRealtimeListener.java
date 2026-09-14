@@ -42,7 +42,7 @@ public class IncidentRealtimeListener {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @Async
+    @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onIncidentChanged(IncidentChangedEvent event) {
         if (event == null || event.payload() == null) {
@@ -51,8 +51,7 @@ public class IncidentRealtimeListener {
         try {
             messagingTemplate.convertAndSend(RealtimeTopics.INCIDENTS, event.payload());
         } catch (Exception ex) {
-            log.warn("Could not push incident {} to {}",
-                    event.payload().id(), RealtimeTopics.INCIDENTS, ex);
+            log.warn("Could not push incident {} to {}", event.payload().id(), RealtimeTopics.INCIDENTS, ex);
         }
     }
 }

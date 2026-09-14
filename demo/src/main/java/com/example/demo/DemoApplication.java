@@ -8,8 +8,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 // Fan-out work that must not sit in the caller's critical path — currently the
-// push of a committed incident to the live consoles — runs on the shared task
-// executor, which is backed by virtual threads.
+// push of a committed incident to the live consoles — runs on the "taskExecutor"
+// bean declared in com.example.demo.config.AsyncConfig, which is backed by
+// virtual threads.
 @EnableAsync
 public class DemoApplication {
 
