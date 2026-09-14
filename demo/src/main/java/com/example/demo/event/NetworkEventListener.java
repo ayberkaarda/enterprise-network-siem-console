@@ -1,7 +1,8 @@
 package com.example.demo.event;
 
-import com.example.demo.entity.AuditLog;
-import com.example.demo.repository.AuditLogRepository;
+import com.example.demo.common.AuditActor;
+import com.example.demo.common.AuditLog;
+import com.example.demo.common.AuditLogRepository;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -29,7 +30,7 @@ public class NetworkEventListener {
                 "' değerine değişti. (Gecikme: " + latencyStr + ")";
 
         // 2. Veritabanına Kalıcı Olarak Kaydetme (Senin yazdığın kısım)
-        AuditLog log = new AuditLog(logMessage, LocalDateTime.now());
+        AuditLog log = new AuditLog(logMessage, LocalDateTime.now(), AuditActor.current());
         auditLogRepository.save(log);
         System.out.println(">>> [EVENT-DRIVEN AUDIT LOG] " + logMessage);
 

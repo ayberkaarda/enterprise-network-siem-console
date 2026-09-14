@@ -26,9 +26,12 @@ services:
     depends_on:
       - siem-db
     environment:
+      - SPRING_PROFILES_ACTIVE=postgres
       - SPRING_DATASOURCE_URL=jdbc:postgresql://siem-db:5432/siem_console
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-siem_admin}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set, see .env.example}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set, see .env.example}
+      - SIEM_ADMIN_PASSWORD=${SIEM_ADMIN_PASSWORD:-changeme-on-first-login}
     networks:
       - siem-network
 

@@ -1,6 +1,6 @@
 package com.example.demo.event;
 
-import com.example.demo.entity.Device;
+import com.example.demo.device.Device;
 
 public class DeviceStatusChangedEvent {
     private final Device device;
@@ -15,7 +15,6 @@ public class DeviceStatusChangedEvent {
         this.latency = latency;
     }
 
-    // Getter metotları
     public Device getDevice() { return device; }
     public String getOldStatus() { return oldStatus; }
     public String getNewStatus() { return newStatus; }

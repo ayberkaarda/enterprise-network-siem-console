@@ -18,6 +18,13 @@
 
 	<properties>
 		<java.version>26</java.version>
+		<mapstruct.version>1.6.3</mapstruct.version>
+		<shedlock.version>7.9.0</shedlock.version>
+		<jjwt.version>0.13.0</jjwt.version>
+		<!-- Bucket4j 8.11 split its artifacts per JDK baseline; the old
+		     com.bucket4j:bucket4j-core coordinate stopped at 8.10.1 and no longer
+		     receives releases. The _jdk17 line is the maintained one. -->
+		<bucket4j.version>8.19.0</bucket4j.version>
 	</properties>
 
 	<dependencies>
@@ -39,6 +46,52 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
+		<!-- Request DTO doğrulaması (Jakarta Bean Validation) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- Entity <-> DTO eşlemesi -->
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${mapstruct.version}</version>
+		</dependency>
+
+		<!-- Şema versiyonlama.
+		     Spring Boot 4'te Flyway otomatik yapılandırması ayrı bir modüldedir;
+		     yalnızca flyway-core eklemek migration'ların çalışmasını sağlamaz. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+
+		<!-- Korelasyon motorunun kayan zaman penceresi durumu icin sinirli,
+		     bellek ici onbellek. Surumu Spring Boot BOM yonetir. -->
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+		</dependency>
+
+		<!-- Zamanlanmis gorevlerin coklu instance'ta tek seferde calismasi icin
+		     dagitik kilit. Kilit, ayri bir altyapi servisi yerine uygulamanin
+		     kendi veritabanindaki 'shedlock' tablosunda tutulur. -->
+		<dependency>
+			<groupId>net.javacrumbs.shedlock</groupId>
+			<artifactId>shedlock-spring</artifactId>
+			<version>${shedlock.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.javacrumbs.shedlock</groupId>
+			<artifactId>shedlock-provider-jdbc-template</artifactId>
+			<version>${shedlock.version}</version>
+		</dependency>
+
 		<!-- PostgreSQL Sürücüsü (H2 Yerine Eklendi) -->
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -46,12 +99,65 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- İzole, bellek içi geliştirme/test veritabanı (h2 profili) -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
 		<!-- Spring Security (API Güvenliği İçin) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- JWT üretimi ve doğrulaması.
+		     jjwt-api derleme zamanı yüzeyi, impl ve jackson yalnızca çalışma
+		     zamanında gerekir. jjwt-jackson, Jackson 2 (com.fasterxml) databind'e
+		     dayanır; sürümü Spring Boot BOM'u yönetir, uygulamanın kendi JSON
+		     katmanı Jackson 3 (tools.jackson) olarak kalır. -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>${jjwt.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Olay alım uç noktasının istemci başına hız sınırı (token bucket). -->
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j_jdk17-core</artifactId>
+			<version>${bucket4j.version}</version>
+		</dependency>
 
 		<!-- Test Bağımlılıkları -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- MockMvc tabanlı web katmanı testleri (Spring Boot 4'te ayrı starter) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- @WithMockUser ve MockMvc guvenlik filtre zinciri destegi -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<!-- Gözlemlenebilirlik: Actuator ve Prometheus -->
@@ -67,6 +173,19 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${mapstruct.version}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

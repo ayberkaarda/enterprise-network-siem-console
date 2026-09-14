@@ -2,39 +2,24 @@ package com.example.demo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
-
-import java.util.Arrays;
 
 @SpringBootApplication
 @EnableScheduling
+// Fan-out work that must not sit in the caller's critical path — currently the
+// push of a committed incident to the live consoles — runs on the shared task
+// executor, which is backed by virtual threads.
+@EnableAsync
 public class DemoApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(DemoApplication.class, args);
     }
 
-    // CORS Sıkıntılarını Kökünden Çözen Global Filtre
-    @Bean
-    public CorsFilter corsFilter() {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowCredentials(true);
-        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));
-        corsConfiguration.setAllowedHeaders(Arrays.asList(
-                "Origin", "Access-Control-Allow-Origin", "Content-Type",
-                "Accept", "Authorization", "X-Requested-With",
-                "Access-Control-Request-Method", "Access-Control-Request-Headers"));
-        corsConfiguration.setExposedHeaders(Arrays.asList(
-                "Origin", "Content-Type", "Accept", "Authorization",
-                "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
-        corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        
-        UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
-        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
-        return new CorsFilter(urlBasedCorsConfigurationSource);
-    }
+    // CORS is configured in com.example.demo.config.SecurityConfig, against a
+    // profile-specific allow-list read from siem.cors.allowed-origins, rather
+    // than as a standalone filter here. A wildcard origin filter and Spring
+    // Security's own CORS handling would otherwise both be in the chain, and
+    // whichever ran first would silently decide the answer.
 }
