@@ -7,29 +7,150 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # Compiles the backend and runs the full test suite (JUnit 5 + Mockito unit
+  # tests, plus Testcontainers-backed integration tests where present).
+  # No explicit Docker setup step is needed here: GitHub-hosted ubuntu-latest
+  # runners ship Docker Engine pre-installed and already running, which is all
+  # Testcontainers needs to start its own throwaway PostgreSQL container per
+  # test run. If this job ever moves to a self-hosted or container-based
+  # runner, that assumption has to be re-checked.
   build-backend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
       - name: Set up JDK 26
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '26'
           distribution: 'temurin'
-      - name: Build with Maven
-        working-directory: ./demo
-        run: mvn clean package -DskipTests
+          cache: 'maven'
 
+      - name: Build and test with Maven
+        working-directory: ./demo
+        run: ./mvnw -q verify
+
+  # npm ci (not npm install) so CI always installs exactly what package-lock.json
+  # pins, and fails loudly on lockfile drift instead of silently re-resolving.
   build-frontend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 20
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-      - name: Build Angular Application
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: network-ui/package-lock.json
+
+      - name: Install dependencies (lockfile-exact)
         working-directory: ./network-ui
+        run: npm ci
+
+      - name: Run unit tests
+        working-directory: ./network-ui
+        # Always "npm test" (-> "ng test" -> @angular/build:unit-test), never
+        # "npx vitest run" directly: the Angular builder wires up zone.js/TestBed
+        # globals that a bare Vitest invocation skips, which fails every spec
+        # with "describe is not defined" instead of actually running them.
+        run: npm test
+
+      - name: Build Angular application
+        working-directory: ./network-ui
+        # "npm run build" already resolves to "ng build" per package.json, so
+        # this covers both dev and prod build validation without a separate
+        # "npx ng build" step.
+        run: npm run build
+
+  # No ESLint config (network-ui/eslint.config.*) and no Java formatter/linter
+  # (Checkstyle or Spotless in demo/pom.xml) exist in this repository yet.
+  # A Prettier config (network-ui/.prettierrc) is present but not wired to any
+  # script or gate. Rather than invent a tool choice and a pass/fail threshold
+  # that nobody has agreed on, this job is a deliberate, visible no-op — it
+  # exists so the pipeline shape (build + test + lint + docker + dependency-scan)
+  # is already in place once a formatter/linter is chosen. See the CI report
+  # for this open decision.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lint placeholder (no linter/formatter configured yet)
         run: |
-          npm install
-          npm run build
+          echo "No ESLint config for network-ui/ and no Checkstyle/Spotless for demo/ yet."
+          echo "This step intentionally does nothing until that tooling choice is made."
+
+  # Builds both application images to catch Dockerfile breakage early. Neither
+  # image is pushed anywhere - there are no registry credentials in this repo.
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [ build-backend, build-frontend ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t siem-backend:ci ./demo
+
+      - name: Build frontend image
+        run: docker build -t siem-frontend:ci ./network-ui
+
+      - name: Validate docker-compose.yml
+        # docker compose config only needs the referenced env vars to be
+        # *present*, not real, so dummy values here are safe: they never run
+        # anything, they just let compose resolve interpolation without
+        # tripping the ":?" required-variable checks in docker-compose.yml.
+        # These are throwaway CI-only values, not secrets.
+        env:
+          POSTGRES_PASSWORD: ci-placeholder-password
+          JWT_SECRET: ci-placeholder-jwt-secret-at-least-32-bytes-long
+        run: docker compose config -q
+
+  # OWASP Dependency-Check instead of Snyk: Snyk needs an account/token this
+  # repo doesn't have, Dependency-Check does not. The Maven plugin is invoked
+  # by full coordinates (no NVD API key configured as a repo secret yet, so
+  # the NVD data download can be slow or rate-limited); this step is
+  # non-blocking for the same reason. The frontend npm audit is also
+  # informational only for now: the current lockfile has known, untriaged
+  # vulnerabilities and nobody has yet decided which ones are worth fixing,
+  # upgrading around, or accepting. Failing the whole pipeline on them today
+  # would just make CI permanently red without that decision having been
+  # made. Both steps still print their findings so the counts stay visible.
+  dependency-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 26
+        uses: actions/setup-java@v4
+        with:
+          java-version: '26'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: OWASP Dependency-Check (backend, informational)
+        working-directory: ./demo
+        continue-on-error: true
+        run: ./mvnw org.owasp:dependency-check-maven:13.0.0:check -DfailBuildOnCVSS=11
+
+      - name: Upload Dependency-Check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: demo/target/dependency-check-report.html
+          if-no-files-found: ignore
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: network-ui/package-lock.json
+
+      - name: Install dependencies (lockfile-exact)
+        working-directory: ./network-ui
+        run: npm ci
+
+      - name: npm audit (frontend, informational)
+        working-directory: ./network-ui
+        continue-on-error: true
+        run: npm audit --audit-level=high
