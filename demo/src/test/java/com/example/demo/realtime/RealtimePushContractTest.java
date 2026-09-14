@@ -1,5 +1,12 @@
 package com.example.demo.realtime;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+
 import com.example.demo.device.Device;
 import com.example.demo.device.DeviceRepository;
 import com.example.demo.event.DeviceStatusChangedEvent;
@@ -8,6 +15,10 @@ import com.example.demo.incident.IncidentService;
 import com.example.demo.incident.IncidentStatus;
 import com.example.demo.incident.Severity;
 import com.example.demo.metrics.SiemMetrics;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,18 +28,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import tools.jackson.databind.ObjectMapper;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.verify;
 
 /**
  * Pins the live push contract: which destinations are used, and what the JSON on
@@ -87,8 +86,8 @@ class RealtimePushContractTest {
         assertThat(pushed.deviceType()).isEqualTo("FIREWALL");
 
         Map<String, Object> json = asJson(pushed);
-        assertThat(json.keySet()).containsExactlyInAnyOrder(
-                "id", "name", "ipAddress", "status", "latency", "deviceType", "changedAt");
+        assertThat(json.keySet())
+                .containsExactlyInAnyOrder("id", "name", "ipAddress", "status", "latency", "deviceType", "changedAt");
         assertThat(json.get("status")).isEqualTo("ACTIVE");
         assertThat(json.get("latency")).isEqualTo(42);
         assertThatCode(() -> Instant.parse(String.valueOf(json.get("changedAt"))))
@@ -107,8 +106,8 @@ class RealtimePushContractTest {
 
     @Test
     void openingAnIncidentAndMovingItBothReachTheIncidentsTopic() {
-        Incident incident = incidentService.create(
-                "realtime contract probe", "opened by a test", Severity.CRITICAL, 7L, "T1046");
+        Incident incident =
+                incidentService.create("realtime contract probe", "opened by a test", Severity.CRITICAL, 7L, "T1046");
 
         IncidentRealtimeEvent opened = awaitIncidentPush(incident.getId(), IncidentStatus.OPEN.name());
         assertThat(opened.title()).isEqualTo("realtime contract probe");
@@ -116,8 +115,9 @@ class RealtimePushContractTest {
         assertThat(opened.sourceDeviceId()).isEqualTo(7L);
 
         Map<String, Object> json = asJson(opened);
-        assertThat(json.keySet()).containsExactlyInAnyOrder(
-                "id", "title", "severity", "status", "sourceDeviceId", "createdAt", "updatedAt");
+        assertThat(json.keySet())
+                .containsExactlyInAnyOrder(
+                        "id", "title", "severity", "status", "sourceDeviceId", "createdAt", "updatedAt");
         assertThatCode(() -> Instant.parse(String.valueOf(json.get("createdAt"))))
                 .doesNotThrowAnyException();
         assertThatCode(() -> Instant.parse(String.valueOf(json.get("updatedAt"))))
@@ -125,11 +125,9 @@ class RealtimePushContractTest {
 
         incidentService.transition(incident.getId(), IncidentStatus.ACKNOWLEDGED);
 
-        IncidentRealtimeEvent acknowledged =
-                awaitIncidentPush(incident.getId(), IncidentStatus.ACKNOWLEDGED.name());
+        IncidentRealtimeEvent acknowledged = awaitIncidentPush(incident.getId(), IncidentStatus.ACKNOWLEDGED.name());
         assertThat(acknowledged.id()).isEqualTo(incident.getId());
-        assertThat(Instant.parse(acknowledged.updatedAt()))
-                .isAfterOrEqualTo(Instant.parse(opened.updatedAt()));
+        assertThat(Instant.parse(acknowledged.updatedAt())).isAfterOrEqualTo(Instant.parse(opened.updatedAt()));
     }
 
     @Test
@@ -150,9 +148,14 @@ class RealtimePushContractTest {
         assertThat(siemMetrics.openIncidents()).isGreaterThanOrEqualTo(1L);
 
         Map<String, Object> json = asJson(pushed);
-        assertThat(json.keySet()).containsExactlyInAnyOrder(
-                "totalDevices", "reachableDevices", "openIncidents",
-                "criticalOrHighIncidents", "avgLatencyMs", "timestamp");
+        assertThat(json.keySet())
+                .containsExactlyInAnyOrder(
+                        "totalDevices",
+                        "reachableDevices",
+                        "openIncidents",
+                        "criticalOrHighIncidents",
+                        "avgLatencyMs",
+                        "timestamp");
         assertThatCode(() -> Instant.parse(String.valueOf(json.get("timestamp"))))
                 .doesNotThrowAnyException();
     }
@@ -161,24 +164,21 @@ class RealtimePushContractTest {
     void anOpenCriticalIncidentIsCountedTowardsTheThreatLevel() {
         MetricsSnapshot before = metricsSnapshotService.currentSnapshot();
 
-        Incident incident = incidentService.create(
-                "threat level probe", null, Severity.CRITICAL, null, null);
+        Incident incident = incidentService.create("threat level probe", null, Severity.CRITICAL, null, null);
 
         // Compared as bounds rather than as exact equalities: the background scan
         // runs on its own timer against the same database and may open findings
         // of its own while this test is in the middle of a measurement.
         MetricsSnapshot afterOpening = metricsSnapshotService.currentSnapshot();
         assertThat(afterOpening.openIncidents()).isGreaterThanOrEqualTo(before.openIncidents() + 1);
-        assertThat(afterOpening.criticalOrHighIncidents())
-                .isGreaterThanOrEqualTo(before.criticalOrHighIncidents() + 1);
+        assertThat(afterOpening.criticalOrHighIncidents()).isGreaterThanOrEqualTo(before.criticalOrHighIncidents() + 1);
 
         incidentService.transition(incident.getId(), IncidentStatus.ACKNOWLEDGED);
         incidentService.transition(incident.getId(), IncidentStatus.IN_PROGRESS);
         incidentService.transition(incident.getId(), IncidentStatus.RESOLVED);
 
         MetricsSnapshot afterResolving = metricsSnapshotService.currentSnapshot();
-        assertThat(afterResolving.openIncidents())
-                .isLessThanOrEqualTo(afterOpening.openIncidents() - 1);
+        assertThat(afterResolving.openIncidents()).isLessThanOrEqualTo(afterOpening.openIncidents() - 1);
         assertThat(afterResolving.criticalOrHighIncidents())
                 .isLessThanOrEqualTo(afterOpening.criticalOrHighIncidents() - 1);
     }
@@ -231,8 +231,8 @@ class RealtimePushContractTest {
                 break;
             }
         }
-        throw new AssertionError("incident " + incidentId + " in state " + status
-                + " never reached " + RealtimeTopics.INCIDENTS);
+        throw new AssertionError(
+                "incident " + incidentId + " in state " + status + " never reached " + RealtimeTopics.INCIDENTS);
     }
 
     @SuppressWarnings("unchecked")

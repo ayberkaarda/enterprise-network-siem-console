@@ -15,8 +15,19 @@ public class DeviceStatusChangedEvent {
         this.latency = latency;
     }
 
-    public Device getDevice() { return device; }
-    public String getOldStatus() { return oldStatus; }
-    public String getNewStatus() { return newStatus; }
-    public Long getLatency() { return latency; }
+    public Device getDevice() {
+        return device;
+    }
+
+    public String getOldStatus() {
+        return oldStatus;
+    }
+
+    public String getNewStatus() {
+        return newStatus;
+    }
+
+    public Long getLatency() {
+        return latency;
+    }
 }

@@ -4,9 +4,8 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import org.springframework.stereotype.Component;
-
 import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.stereotype.Component;
 
 /**
  * The operational meters this service exports, in one place.

@@ -9,8 +9,7 @@ import org.springframework.data.jpa.domain.Specification;
  */
 public final class IncidentSpecifications {
 
-    private IncidentSpecifications() {
-    }
+    private IncidentSpecifications() {}
 
     public static Specification<Incident> hasStatus(IncidentStatus status) {
         if (status == null) {
@@ -37,8 +36,6 @@ public final class IncidentSpecifications {
      * Combines every supported incident filter; null criteria are skipped.
      */
     public static Specification<Incident> filterBy(IncidentStatus status, Severity severity, Long sourceDeviceId) {
-        return Specification.where(hasStatus(status))
-                .and(hasSeverity(severity))
-                .and(hasSourceDeviceId(sourceDeviceId));
+        return Specification.where(hasStatus(status)).and(hasSeverity(severity)).and(hasSourceDeviceId(sourceDeviceId));
     }
 }

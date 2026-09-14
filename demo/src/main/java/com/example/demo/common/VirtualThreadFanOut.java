@@ -1,8 +1,5 @@
 package com.example.demo.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -11,6 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Runs one short-lived task per item, each on its own virtual thread, and
@@ -32,8 +31,7 @@ public final class VirtualThreadFanOut {
 
     private static final Logger log = LoggerFactory.getLogger(VirtualThreadFanOut.class);
 
-    private VirtualThreadFanOut() {
-    }
+    private VirtualThreadFanOut() {}
 
     /**
      * Applies {@code action} to every item concurrently and waits for all of

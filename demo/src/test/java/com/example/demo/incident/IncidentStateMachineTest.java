@@ -1,11 +1,11 @@
 package com.example.demo.incident;
 
-import com.example.demo.common.IllegalStateTransitionException;
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.example.demo.common.IllegalStateTransitionException;
+import org.junit.jupiter.api.Test;
 
 /**
  * The lifecycle is the part of this system an auditor reads. These tests pin
@@ -17,30 +17,31 @@ class IncidentStateMachineTest {
     @Test
     void fullLifecyclePathIsLegalStepByStep() {
         assertThatCode(() -> {
-            IncidentStateMachine.validateTransition(IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED);
-            IncidentStateMachine.validateTransition(IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS);
-            IncidentStateMachine.validateTransition(IncidentStatus.IN_PROGRESS, IncidentStatus.RESOLVED);
-            IncidentStateMachine.validateTransition(IncidentStatus.RESOLVED, IncidentStatus.CLOSED);
-        }).doesNotThrowAnyException();
+                    IncidentStateMachine.validateTransition(IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED);
+                    IncidentStateMachine.validateTransition(IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS);
+                    IncidentStateMachine.validateTransition(IncidentStatus.IN_PROGRESS, IncidentStatus.RESOLVED);
+                    IncidentStateMachine.validateTransition(IncidentStatus.RESOLVED, IncidentStatus.CLOSED);
+                })
+                .doesNotThrowAnyException();
     }
 
     @Test
     void resolvedIncidentMayBeReopened() {
-        assertThat(IncidentStateMachine.canTransition(IncidentStatus.RESOLVED, IncidentStatus.IN_PROGRESS)).isTrue();
+        assertThat(IncidentStateMachine.canTransition(IncidentStatus.RESOLVED, IncidentStatus.IN_PROGRESS))
+                .isTrue();
     }
 
     @Test
     void closingAnOpenIncidentDirectlyIsRejected() {
-        assertThatThrownBy(() ->
-                IncidentStateMachine.validateTransition(IncidentStatus.OPEN, IncidentStatus.CLOSED))
+        assertThatThrownBy(() -> IncidentStateMachine.validateTransition(IncidentStatus.OPEN, IncidentStatus.CLOSED))
                 .isInstanceOf(IllegalStateTransitionException.class)
                 .hasMessage("Cannot transition incident from OPEN to CLOSED");
     }
 
     @Test
     void skippingAcknowledgementIsRejected() {
-        assertThatThrownBy(() ->
-                IncidentStateMachine.validateTransition(IncidentStatus.OPEN, IncidentStatus.IN_PROGRESS))
+        assertThatThrownBy(
+                        () -> IncidentStateMachine.validateTransition(IncidentStatus.OPEN, IncidentStatus.IN_PROGRESS))
                 .isInstanceOf(IllegalStateTransitionException.class)
                 .hasMessage("Cannot transition incident from OPEN to IN_PROGRESS");
     }
@@ -66,8 +67,10 @@ class IncidentStateMachineTest {
 
     @Test
     void nullStatesAreNeverTransitionable() {
-        assertThat(IncidentStateMachine.canTransition(null, IncidentStatus.OPEN)).isFalse();
-        assertThat(IncidentStateMachine.canTransition(IncidentStatus.OPEN, null)).isFalse();
+        assertThat(IncidentStateMachine.canTransition(null, IncidentStatus.OPEN))
+                .isFalse();
+        assertThat(IncidentStateMachine.canTransition(IncidentStatus.OPEN, null))
+                .isFalse();
         assertThat(IncidentStateMachine.allowedTargets(null)).isEmpty();
     }
 

@@ -8,5 +8,4 @@ package com.example.demo.security;
  * 400 would tell a caller that the shape of their guess was the problem. Every
  * rejected login leaves by the same 401 door.
  */
-public record LoginRequest(String username, String password) {
-}
+public record LoginRequest(String username, String password) {}

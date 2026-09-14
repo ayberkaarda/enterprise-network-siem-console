@@ -15,5 +15,4 @@ public record IncidentCreateRequest(
         @NotNull Severity severity,
         Long sourceDeviceId,
         @Size(max = 32) String mitreTechniqueId,
-        @Size(max = 255) String assignee) {
-}
+        @Size(max = 255) String assignee) {}

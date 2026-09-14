@@ -5,5 +5,4 @@ package com.example.demo.security;
  * {@link LoginRequest}, a missing or empty value is a rejected credential
  * rather than a malformed request.
  */
-public record RefreshRequest(String refreshToken) {
-}
+public record RefreshRequest(String refreshToken) {}

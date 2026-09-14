@@ -8,5 +8,4 @@ package com.example.demo.realtime;
  * row; the listener then has nothing left to read, which is what makes it safe
  * to run after the transaction has closed and on another thread.
  */
-public record IncidentChangedEvent(IncidentRealtimeEvent payload) {
-}
+public record IncidentChangedEvent(IncidentRealtimeEvent payload) {}

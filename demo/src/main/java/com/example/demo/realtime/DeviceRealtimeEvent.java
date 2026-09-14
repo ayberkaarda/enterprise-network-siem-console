@@ -2,7 +2,6 @@ package com.example.demo.realtime;
 
 import com.example.demo.device.Device;
 import com.example.demo.event.DeviceStatusChangedEvent;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
@@ -21,13 +20,7 @@ import java.time.temporal.ChronoUnit;
  * @param changedAt ISO-8601 instant, in UTC, at which this push was produced
  */
 public record DeviceRealtimeEvent(
-        Long id,
-        String name,
-        String ipAddress,
-        String status,
-        Long latency,
-        String deviceType,
-        String changedAt) {
+        Long id, String name, String ipAddress, String status, Long latency, String deviceType, String changedAt) {
 
     public static DeviceRealtimeEvent from(DeviceStatusChangedEvent event) {
         Device device = event.getDevice();

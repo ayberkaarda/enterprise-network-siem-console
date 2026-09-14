@@ -1,5 +1,11 @@
 package com.example.demo.device;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,12 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Pins the wire contract of both API generations.
@@ -85,9 +85,11 @@ class DeviceApiContractTest {
 
     @Test
     void versionedCreateReturnsCreatedWithResponseDto() throws Exception {
-        mockMvc.perform(post("/api/v1/devices")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"v1-firewall\",\"ipAddress\":\"192.168.77.10\",\"deviceType\":\"FIREWALL\"}"))
+        mockMvc.perform(
+                        post("/api/v1/devices")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"name\":\"v1-firewall\",\"ipAddress\":\"192.168.77.10\",\"deviceType\":\"FIREWALL\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.name").value("v1-firewall"))

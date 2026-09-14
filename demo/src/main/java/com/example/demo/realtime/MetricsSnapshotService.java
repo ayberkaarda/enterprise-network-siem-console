@@ -4,12 +4,11 @@ import com.example.demo.device.DeviceRepository;
 import com.example.demo.incident.IncidentRepository;
 import com.example.demo.incident.IncidentStatus;
 import com.example.demo.incident.Severity;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Computes the console-wide snapshot.
@@ -39,8 +38,7 @@ public class MetricsSnapshotService {
     private final DeviceRepository deviceRepository;
     private final IncidentRepository incidentRepository;
 
-    public MetricsSnapshotService(DeviceRepository deviceRepository,
-                                  IncidentRepository incidentRepository) {
+    public MetricsSnapshotService(DeviceRepository deviceRepository, IncidentRepository incidentRepository) {
         this.deviceRepository = deviceRepository;
         this.incidentRepository = incidentRepository;
     }
@@ -50,8 +48,7 @@ public class MetricsSnapshotService {
         long totalDevices = deviceRepository.count();
         long reachableDevices = deviceRepository.countByStatus(REACHABLE_STATUS);
         long openIncidents = incidentRepository.countByStatusIn(OPEN_STATUSES);
-        long escalatedIncidents =
-                incidentRepository.countByStatusInAndSeverityIn(OPEN_STATUSES, ESCALATED_SEVERITIES);
+        long escalatedIncidents = incidentRepository.countByStatusInAndSeverityIn(OPEN_STATUSES, ESCALATED_SEVERITIES);
 
         Double averageLatency = deviceRepository.averageLatencyByStatus(REACHABLE_STATUS);
 

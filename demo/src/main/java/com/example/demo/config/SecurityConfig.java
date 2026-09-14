@@ -5,6 +5,9 @@ import com.example.demo.security.JwtAuthenticationFilter;
 import com.example.demo.security.ProblemResponseWriter;
 import com.example.demo.security.RestAccessDeniedHandler;
 import com.example.demo.security.RestAuthenticationEntryPoint;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,10 +23,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Wires the pieces already living in {@code security} into an actual request
@@ -42,9 +41,10 @@ import java.util.List;
  * CONNECT frame header once the session is up (see {@code RealtimeService} in
  * the frontend). Requiring an HTTP-layer credential here would not add a check
  * at the STOMP layer; it would simply stop the socket from ever reaching one,
- * breaking every live update. Enforcing the CONNECT-frame credential is a STOMP
- * channel interceptor, not an HTTP filter, and is not wired up yet — the socket
- * is reachable without a token until that lands.
+ * breaking every live update. The CONNECT frame is verified instead by
+ * {@code StompAuthChannelInterceptor} on the message broker's inbound channel,
+ * so an open handshake still cannot produce a session, let alone a
+ * subscription.
  */
 @Configuration
 @EnableWebSecurity
@@ -108,24 +108,31 @@ public class SecurityConfig {
             IngestionRateLimitFilter ingestionRateLimitFilter,
             RestAuthenticationEntryPoint restAuthenticationEntryPoint,
             RestAccessDeniedHandler restAccessDeniedHandler,
-            CorsConfigurationSource corsConfigurationSource) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+            CorsConfigurationSource corsConfigurationSource)
+            throws Exception {
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/auth/**")
+                        .permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**")
+                        .permitAll()
                         // Scraped by Prometheus over the private docker-compose network only
                         // (siem-network), never exposed to a public interface — see docker-compose.yml.
-                        .requestMatchers("/actuator/prometheus").permitAll()
+                        .requestMatchers("/actuator/prometheus")
+                        .permitAll()
+                        // OpenAPI schema + Swagger UI: read-only documentation of the
+                        // already-public API shapes, not a security boundary itself.
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                        .permitAll()
                         // See the class-level note: the HTTP handshake has to stay open for
-                        // the socket to be reachable at all, credential enforcement for it
-                        // happens (or, right now, does not yet happen) at the STOMP layer.
-                        .requestMatchers("/ws-siem/**").permitAll()
-                        .anyRequest().authenticated())
-                .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        // the socket to be reachable at all; the credential is enforced one
+                        // layer up, on the STOMP CONNECT frame.
+                        .requestMatchers("/ws-siem/**")
+                        .permitAll()
+                        .anyRequest()
+                        .authenticated())
+                .exceptionHandling(handling -> handling.authenticationEntryPoint(restAuthenticationEntryPoint)
                         .accessDeniedHandler(restAccessDeniedHandler))
                 // Order matters here beyond readability: addFilterBefore resolves its
                 // "before" argument against filters already registered in this chain,

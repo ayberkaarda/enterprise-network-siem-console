@@ -1,12 +1,11 @@
 package com.example.demo.correlation.threatintel;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Reputation lookup backed by a locally configured blocklist.
@@ -32,7 +31,7 @@ public class LocalBlocklistProvider implements ThreatIntelProvider {
 
     public LocalBlocklistProvider(
             @Value("${siem.threat-intel.blocklist:192.0.2.66,198.51.100.14,203.0.113.7,203.0.113.}")
-            List<String> blocklist) {
+                    List<String> blocklist) {
         Set<String> exact = new LinkedHashSet<>();
         List<String> prefixList = new ArrayList<>();
         if (blocklist != null) {

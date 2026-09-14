@@ -9,5 +9,4 @@ import java.time.LocalDateTime;
  *              for the unattended scheduled scan, or {@code null} for an entry
  *              written before this column existed
  */
-public record AuditLogResponse(Long id, String message, LocalDateTime timestamp, String actor) {
-}
+public record AuditLogResponse(Long id, String message, LocalDateTime timestamp, String actor) {}

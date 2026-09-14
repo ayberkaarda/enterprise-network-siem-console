@@ -43,8 +43,7 @@ public class User {
     private boolean enabled = true;
 
     /** Required by JPA. */
-    protected User() {
-    }
+    protected User() {}
 
     public User(String username, String passwordHash, Role role, boolean enabled) {
         this.username = username;

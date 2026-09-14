@@ -1,26 +1,15 @@
 package com.example.demo.correlation;
 
+import com.example.demo.anomaly.LatencyBaselineService;
 import com.example.demo.correlation.threatintel.ThreatIntelProvider;
 import com.example.demo.device.Device;
 import com.example.demo.event.DeviceStatusChangedEvent;
-import com.example.demo.anomaly.LatencyBaselineService;
 import com.example.demo.incident.Incident;
 import com.example.demo.incident.IncidentService;
 import com.example.demo.incident.Severity;
 import com.example.demo.ingestion.IngestedEvent;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayDeque;
@@ -32,6 +21,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Evaluates the stored correlation rules against the live event stream.
@@ -96,21 +95,28 @@ public class CorrelationEngine {
     private final Cache<String, Long> lastFired;
 
     @Autowired
-    public CorrelationEngine(RuleRepository ruleRepository,
-                             IncidentService incidentService,
-                             LatencyBaselineService latencyBaselineService,
-                             ThreatIntelProvider threatIntelProvider,
-                             ObjectMapper objectMapper) {
-        this(ruleRepository, incidentService, latencyBaselineService, threatIntelProvider,
-                objectMapper, Clock.systemUTC());
+    public CorrelationEngine(
+            RuleRepository ruleRepository,
+            IncidentService incidentService,
+            LatencyBaselineService latencyBaselineService,
+            ThreatIntelProvider threatIntelProvider,
+            ObjectMapper objectMapper) {
+        this(
+                ruleRepository,
+                incidentService,
+                latencyBaselineService,
+                threatIntelProvider,
+                objectMapper,
+                Clock.systemUTC());
     }
 
-    CorrelationEngine(RuleRepository ruleRepository,
-                      IncidentService incidentService,
-                      LatencyBaselineService latencyBaselineService,
-                      ThreatIntelProvider threatIntelProvider,
-                      ObjectMapper objectMapper,
-                      Clock clock) {
+    CorrelationEngine(
+            RuleRepository ruleRepository,
+            IncidentService incidentService,
+            LatencyBaselineService latencyBaselineService,
+            ThreatIntelProvider threatIntelProvider,
+            ObjectMapper objectMapper,
+            Clock clock) {
         this.ruleRepository = ruleRepository;
         this.incidentService = incidentService;
         this.latencyBaselineService = latencyBaselineService;
@@ -165,8 +171,8 @@ public class CorrelationEngine {
 
     private CompiledRule compile(Rule rule) {
         try {
-            JsonNode condition = objectMapper.readTree(
-                    rule.getConditionJson() == null ? "{}" : rule.getConditionJson());
+            JsonNode condition =
+                    objectMapper.readTree(rule.getConditionJson() == null ? "{}" : rule.getConditionJson());
             JsonNode typeNode = condition.get("type");
             if (typeNode == null || typeNode.asText().isBlank()) {
                 log.warn("Correlation rule {} has no condition type, skipping", rule.getId());
@@ -215,7 +221,10 @@ public class CorrelationEngine {
                     }
                 }
             } catch (Exception ex) {
-                log.warn("Correlation rule {} failed on a device event", compiled.rule().getId(), ex);
+                log.warn(
+                        "Correlation rule {} failed on a device event",
+                        compiled.rule().getId(),
+                        ex);
             }
         }
     }
@@ -230,15 +239,15 @@ public class CorrelationEngine {
         if (!claimFire(cooldownKey, rule, now)) {
             return;
         }
-        raise(rule,
+        raise(
+                rule,
                 "Device flapping: " + describe(device),
-                "Rule '" + rule.getName() + "' matched: " + describe(device) + " changed status "
-                        + occurrences + " times within " + rule.getWindowSeconds() + " seconds.",
+                "Rule '" + rule.getName() + "' matched: " + describe(device) + " changed status " + occurrences
+                        + " times within " + rule.getWindowSeconds() + " seconds.",
                 device.getId());
     }
 
-    private void evaluateSubnetOutage(CompiledRule compiled, Device device,
-                                      DeviceStatusChangedEvent event, long now) {
+    private void evaluateSubnetOutage(CompiledRule compiled, Device device, DeviceStatusChangedEvent event, long now) {
         Rule rule = compiled.rule();
         Set<String> downStatuses = downStatuses(compiled.condition());
         if (event.getNewStatus() == null || !downStatuses.contains(event.getNewStatus())) {
@@ -263,7 +272,8 @@ public class CorrelationEngine {
         if (!claimFire("outage|" + stateKey, rule, now)) {
             return;
         }
-        raise(rule,
+        raise(
+                rule,
                 "Possible uplink failure on " + subnet + "0/24",
                 "Rule '" + rule.getName() + "' matched: " + affected + " devices on " + subnet
                         + "0/24 went down within " + rule.getWindowSeconds()
@@ -271,8 +281,8 @@ public class CorrelationEngine {
                 device.getId());
     }
 
-    private void evaluateLatencyAnomaly(CompiledRule compiled, Device device,
-                                        DeviceStatusChangedEvent event, long now) {
+    private void evaluateLatencyAnomaly(
+            CompiledRule compiled, Device device, DeviceStatusChangedEvent event, long now) {
         Rule rule = compiled.rule();
         Long latency = event.getLatency();
         if (latency == null || !latencyBaselineService.isAnomalous(device.getId(), latency)) {
@@ -281,14 +291,16 @@ public class CorrelationEngine {
         if (!claimFire("latency|" + rule.getId() + "|" + device.getId(), rule, now)) {
             return;
         }
-        String baselineText = latencyBaselineService.baselineFor(device.getId())
-                .map(baseline -> String.format("baseline %.1f ms, deviation %.1f ms",
-                        baseline.mean(), baseline.standardDeviation()))
+        String baselineText = latencyBaselineService
+                .baselineFor(device.getId())
+                .map(baseline -> String.format(
+                        "baseline %.1f ms, deviation %.1f ms", baseline.mean(), baseline.standardDeviation()))
                 .orElse("no baseline");
-        raise(rule,
+        raise(
+                rule,
                 "Latency anomaly: " + describe(device),
-                "Rule '" + rule.getName() + "' matched: " + describe(device) + " reported "
-                        + latency + " ms against its own " + baselineText + ".",
+                "Rule '" + rule.getName() + "' matched: " + describe(device) + " reported " + latency
+                        + " ms against its own " + baselineText + ".",
                 device.getId());
     }
 
@@ -314,7 +326,10 @@ public class CorrelationEngine {
             try {
                 evaluateEventBurst(compiled, event, now);
             } catch (Exception ex) {
-                log.warn("Correlation rule {} failed on an ingested event", compiled.rule().getId(), ex);
+                log.warn(
+                        "Correlation rule {} failed on an ingested event",
+                        compiled.rule().getId(),
+                        ex);
             }
         }
     }
@@ -331,8 +346,8 @@ public class CorrelationEngine {
         lastFired.put(key, now);
         incidentService.create(
                 "Event from known-bad source " + event.getSource(),
-                "Threat intelligence flagged " + event.getSource()
-                        + ", which submitted a '" + event.getCategory() + "' event.",
+                "Threat intelligence flagged " + event.getSource() + ", which submitted a '" + event.getCategory()
+                        + "' event.",
                 Severity.HIGH,
                 null,
                 null);
@@ -353,10 +368,11 @@ public class CorrelationEngine {
         if (!claimFire("burst|" + stateKey, rule, now)) {
             return;
         }
-        raise(rule,
+        raise(
+                rule,
                 "Event burst from " + event.getSource(),
-                "Rule '" + rule.getName() + "' matched: " + occurrences + " events from "
-                        + event.getSource() + " within " + rule.getWindowSeconds() + " seconds.",
+                "Rule '" + rule.getName() + "' matched: " + occurrences + " events from " + event.getSource()
+                        + " within " + rule.getWindowSeconds() + " seconds.",
                 null);
     }
 
@@ -466,6 +482,5 @@ public class CorrelationEngine {
      * A rule with its condition already parsed, so evaluation never touches the
      * JSON text.
      */
-    record CompiledRule(Rule rule, String type, JsonNode condition) {
-    }
+    record CompiledRule(Rule rule, String type, JsonNode condition) {}
 }

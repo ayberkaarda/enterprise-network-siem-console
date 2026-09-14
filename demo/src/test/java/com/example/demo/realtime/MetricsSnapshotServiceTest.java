@@ -1,18 +1,17 @@
 package com.example.demo.realtime;
 
-import com.example.demo.device.DeviceRepository;
-import com.example.demo.incident.IncidentRepository;
-import com.example.demo.incident.IncidentStatus;
-import com.example.demo.incident.Severity;
-import org.junit.jupiter.api.Test;
-
-import java.time.Instant;
-import java.util.Set;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import com.example.demo.device.DeviceRepository;
+import com.example.demo.incident.IncidentRepository;
+import com.example.demo.incident.IncidentStatus;
+import com.example.demo.incident.Severity;
+import java.time.Instant;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
 
 /**
  * Pins the arithmetic behind the live snapshot, which is what the console's
@@ -27,8 +26,7 @@ class MetricsSnapshotServiceTest {
 
     private final DeviceRepository deviceRepository = mock(DeviceRepository.class);
     private final IncidentRepository incidentRepository = mock(IncidentRepository.class);
-    private final MetricsSnapshotService service =
-            new MetricsSnapshotService(deviceRepository, incidentRepository);
+    private final MetricsSnapshotService service = new MetricsSnapshotService(deviceRepository, incidentRepository);
 
     @Test
     void countsComeFromTheStatusesAndSeveritiesTheConsoleCaresAbout() {
@@ -36,7 +34,8 @@ class MetricsSnapshotServiceTest {
         when(deviceRepository.countByStatus("ACTIVE")).thenReturn(10L);
         when(deviceRepository.averageLatencyByStatus("ACTIVE")).thenReturn(38.44d);
         when(incidentRepository.countByStatusIn(UNFINISHED)).thenReturn(3L);
-        when(incidentRepository.countByStatusInAndSeverityIn(UNFINISHED, ESCALATED)).thenReturn(1L);
+        when(incidentRepository.countByStatusInAndSeverityIn(UNFINISHED, ESCALATED))
+                .thenReturn(1L);
 
         MetricsSnapshot snapshot = service.currentSnapshot();
 
@@ -51,8 +50,7 @@ class MetricsSnapshotServiceTest {
     @Test
     void resolvedAndClosedIncidentsAreNotOpenWork() {
         assertThat(MetricsSnapshotService.OPEN_STATUSES)
-                .containsExactlyInAnyOrder(
-                        IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS)
+                .containsExactlyInAnyOrder(IncidentStatus.OPEN, IncidentStatus.ACKNOWLEDGED, IncidentStatus.IN_PROGRESS)
                 .doesNotContain(IncidentStatus.RESOLVED, IncidentStatus.CLOSED);
     }
 

@@ -9,13 +9,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.time.Duration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
-import java.time.Duration;
 
 /**
  * Per-client token bucket in front of the event ingestion endpoint.
@@ -42,11 +41,12 @@ public class IngestionRateLimitFilter extends OncePerRequestFilter {
     private final Cache<String, Bucket> buckets;
     private final ProblemResponseWriter problemResponseWriter;
 
-    public IngestionRateLimitFilter(String protectedPath,
-                                    long capacity,
-                                    Duration refillPeriod,
-                                    Duration idleRetention,
-                                    ProblemResponseWriter problemResponseWriter) {
+    public IngestionRateLimitFilter(
+            String protectedPath,
+            long capacity,
+            Duration refillPeriod,
+            Duration idleRetention,
+            ProblemResponseWriter problemResponseWriter) {
         this.protectedPath = protectedPath;
         this.capacity = capacity;
         this.refillPeriod = refillPeriod;
@@ -62,21 +62,26 @@ public class IngestionRateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-        return !HttpMethod.POST.matches(request.getMethod())
-                || !protectedPath.equals(request.getRequestURI());
+        return !HttpMethod.POST.matches(request.getMethod()) || !protectedPath.equals(request.getRequestURI());
     }
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
         Bucket bucket = buckets.get(clientKey(request), key -> newBucket());
         if (bucket != null && bucket.tryConsume(1)) {
             filterChain.doFilter(request, response);
             return;
         }
-        problemResponseWriter.write(response, HttpStatus.TOO_MANY_REQUESTS, "Rate limit exceeded",
-                "Bu kaynak icin izin verilen istek hizi asildi.", ErrorCode.RATE_LIMIT_EXCEEDED);
+        problemResponseWriter.write(
+                response,
+                HttpStatus.TOO_MANY_REQUESTS,
+                "Rate limit exceeded",
+                "Bu kaynak icin izin verilen istek hizi asildi.",
+                ErrorCode.RATE_LIMIT_EXCEEDED);
     }
 
     private Bucket newBucket() {

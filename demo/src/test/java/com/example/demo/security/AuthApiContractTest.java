@@ -1,5 +1,10 @@
 package com.example.demo.security;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,11 +16,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Pins the wire contract of the authentication endpoints and of the security
@@ -35,6 +35,7 @@ class AuthApiContractTest {
      * so its built-in development fallback applies.
      */
     private static final String BOOTSTRAPPED_ADMIN_USERNAME = "admin";
+
     private static final String BOOTSTRAPPED_ADMIN_PASSWORD = "changeme-on-first-login";
 
     @Autowired
@@ -82,8 +83,7 @@ class AuthApiContractTest {
 
     @Test
     void refreshWithAValidTokenReturnsAFreshPair() throws Exception {
-        String refreshToken =
-                loginAndExtract(BOOTSTRAPPED_ADMIN_USERNAME, BOOTSTRAPPED_ADMIN_PASSWORD, "refreshToken");
+        String refreshToken = loginAndExtract(BOOTSTRAPPED_ADMIN_USERNAME, BOOTSTRAPPED_ADMIN_PASSWORD, "refreshToken");
 
         mockMvc.perform(post("/api/v1/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,8 +104,7 @@ class AuthApiContractTest {
 
     @Test
     void anAuthenticatedGetReachesTheController() throws Exception {
-        String accessToken =
-                loginAndExtract(BOOTSTRAPPED_ADMIN_USERNAME, BOOTSTRAPPED_ADMIN_PASSWORD, "accessToken");
+        String accessToken = loginAndExtract(BOOTSTRAPPED_ADMIN_USERNAME, BOOTSTRAPPED_ADMIN_PASSWORD, "accessToken");
 
         mockMvc.perform(get("/api/v1/devices").header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk());

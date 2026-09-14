@@ -6,5 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface IngestedEventRepository
-        extends JpaRepository<IngestedEvent, Long>, JpaSpecificationExecutor<IngestedEvent> {
-}
+        extends JpaRepository<IngestedEvent, Long>, JpaSpecificationExecutor<IngestedEvent> {}

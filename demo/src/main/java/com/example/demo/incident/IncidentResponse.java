@@ -18,5 +18,4 @@ public record IncidentResponse(
         String mitreTechniqueId,
         String assignee,
         Instant createdAt,
-        Instant updatedAt) {
-}
+        Instant updatedAt) {}

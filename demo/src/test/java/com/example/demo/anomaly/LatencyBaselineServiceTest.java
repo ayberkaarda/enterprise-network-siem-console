@@ -1,12 +1,12 @@
 package com.example.demo.anomaly;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+
 import com.example.demo.device.Device;
 import com.example.demo.event.DeviceStatusChangedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
 
 /**
  * The baseline is an arithmetic claim, so it is tested arithmetically: a fixed
@@ -118,8 +118,7 @@ class LatencyBaselineServiceTest {
         device.setIpAddress("10.0.0.1");
 
         for (int i = 0; i < 6; i++) {
-            service.onDeviceStatusChanged(
-                    new DeviceStatusChangedEvent(device, "ACTIVE", "ACTIVE", 50L));
+            service.onDeviceStatusChanged(new DeviceStatusChangedEvent(device, "ACTIVE", "ACTIVE", 50L));
         }
 
         LatencyBaseline baseline = service.baselineFor(DEVICE_ID).orElseThrow();

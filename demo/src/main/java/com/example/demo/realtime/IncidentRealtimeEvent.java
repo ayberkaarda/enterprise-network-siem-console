@@ -1,7 +1,6 @@
 package com.example.demo.realtime;
 
 import com.example.demo.incident.Incident;
-
 import java.time.Instant;
 
 /**

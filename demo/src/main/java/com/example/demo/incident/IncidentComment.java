@@ -6,7 +6,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
-
 import java.time.Instant;
 
 /**
@@ -34,8 +33,7 @@ public class IncidentComment {
     private Instant createdAt;
 
     /** Required by JPA. */
-    public IncidentComment() {
-    }
+    public IncidentComment() {}
 
     public IncidentComment(Long incidentId, String author, String body) {
         this.incidentId = incidentId;

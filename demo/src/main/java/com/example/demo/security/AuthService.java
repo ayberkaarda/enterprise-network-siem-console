@@ -2,11 +2,10 @@ package com.example.demo.security;
 
 import com.example.demo.common.InvalidCredentialsException;
 import io.jsonwebtoken.Claims;
+import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 /**
  * Credential checking and token issue.
@@ -25,8 +24,7 @@ public class AuthService {
      * noticeably faster than a wrong password, and the difference is enough to
      * enumerate accounts over a few thousand requests.
      */
-    private static final String ABSENT_USER_DIGEST =
-            "$2a$10$7EqJtq98hPqEX7fNZaFWoOa9YkQKXJRZQ9hXQK0aB1pCkF9O6HbGS";
+    private static final String ABSENT_USER_DIGEST = "$2a$10$7EqJtq98hPqEX7fNZaFWoOa9YkQKXJRZQ9hXQK0aB1pCkF9O6HbGS";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -43,9 +41,7 @@ public class AuthService {
         String username = request == null || request.username() == null ? "" : request.username();
         String password = request == null || request.password() == null ? "" : request.password();
 
-        Optional<User> candidate = username.isBlank()
-                ? Optional.empty()
-                : userRepository.findByUsername(username);
+        Optional<User> candidate = username.isBlank() ? Optional.empty() : userRepository.findByUsername(username);
 
         if (candidate.isEmpty()) {
             passwordEncoder.matches(password, ABSENT_USER_DIGEST);
@@ -71,7 +67,8 @@ public class AuthService {
         String presented = request == null ? null : request.refreshToken();
         Claims claims = jwtService.parseRefreshToken(presented).orElseThrow(this::rejected);
 
-        User user = userRepository.findByUsername(claims.getSubject())
+        User user = userRepository
+                .findByUsername(claims.getSubject())
                 .filter(User::isEnabled)
                 .orElseThrow(this::rejected);
 

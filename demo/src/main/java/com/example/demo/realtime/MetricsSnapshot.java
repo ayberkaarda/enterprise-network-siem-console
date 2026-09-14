@@ -20,5 +20,4 @@ public record MetricsSnapshot(
         long openIncidents,
         long criticalOrHighIncidents,
         double avgLatencyMs,
-        String timestamp) {
-}
+        String timestamp) {}

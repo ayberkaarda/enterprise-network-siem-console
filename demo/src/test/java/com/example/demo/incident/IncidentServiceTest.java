@@ -1,18 +1,17 @@
 package com.example.demo.incident;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.example.demo.common.AuditLog;
 import com.example.demo.common.AuditLogRepository;
 import com.example.demo.common.IllegalStateTransitionException;
 import com.example.demo.common.IncidentNotFoundException;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * The audit trail is the reason the lifecycle exists, so it is asserted here
@@ -30,8 +29,7 @@ class IncidentServiceTest {
 
     @Test
     void everySuccessfulTransitionLeavesAnAuditEntry() {
-        Incident incident = incidentService.create(
-                "audited incident", "opened by a test", Severity.HIGH, 5L, "T1110");
+        Incident incident = incidentService.create("audited incident", "opened by a test", Severity.HIGH, 5L, "T1110");
 
         assertThat(incident.getStatus()).isEqualTo(IncidentStatus.OPEN);
         assertThat(incident.getCreatedAt()).isNotNull();
@@ -47,8 +45,7 @@ class IncidentServiceTest {
 
     @Test
     void aRejectedTransitionChangesNothingAndLeavesNoAuditEntry() {
-        Incident incident = incidentService.create(
-                "unchanged incident", "opened by a test", Severity.LOW, null, null);
+        Incident incident = incidentService.create("unchanged incident", "opened by a test", Severity.LOW, null, null);
 
         assertThatThrownBy(() -> incidentService.transition(incident.getId(), IncidentStatus.CLOSED))
                 .isInstanceOf(IllegalStateTransitionException.class);
@@ -60,8 +57,7 @@ class IncidentServiceTest {
 
     @Test
     void commentsAreReturnedOldestFirst() {
-        Incident incident = incidentService.create(
-                "commented incident", null, Severity.MEDIUM, null, null);
+        Incident incident = incidentService.create("commented incident", null, Severity.MEDIUM, null, null);
 
         incidentService.addComment(incident.getId(), "analyst-1", "first");
         incidentService.addComment(incident.getId(), "analyst-2", "second");
@@ -73,15 +69,12 @@ class IncidentServiceTest {
 
     @Test
     void unknownIncidentIsReportedAsSuch() {
-        assertThatThrownBy(() -> incidentService.getById(987654324L))
-                .isInstanceOf(IncidentNotFoundException.class);
+        assertThatThrownBy(() -> incidentService.getById(987654324L)).isInstanceOf(IncidentNotFoundException.class);
         assertThatThrownBy(() -> incidentService.addComment(987654324L, "a", "b"))
                 .isInstanceOf(IncidentNotFoundException.class);
     }
 
     private List<String> messages() {
-        return auditLogRepository.findAll().stream()
-                .map(AuditLog::getMessage)
-                .toList();
+        return auditLogRepository.findAll().stream().map(AuditLog::getMessage).toList();
     }
 }

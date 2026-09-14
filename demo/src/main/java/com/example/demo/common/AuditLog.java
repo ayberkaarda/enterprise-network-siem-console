@@ -26,8 +26,7 @@ public class AuditLog {
     private String actor;
 
     /** Required by JPA. */
-    public AuditLog() {
-    }
+    public AuditLog() {}
 
     public AuditLog(String message, LocalDateTime timestamp, String actor) {
         this.message = message;

@@ -3,14 +3,13 @@ package com.example.demo.security;
 import com.example.demo.common.ErrorCode;
 import com.example.demo.common.ProblemDetails;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Writes an RFC 7807 body straight onto the servlet response.
@@ -29,8 +28,8 @@ public class ProblemResponseWriter {
         this.objectMapper = objectMapper;
     }
 
-    public void write(HttpServletResponse response, HttpStatus status, String title,
-                      String detail, ErrorCode errorCode) throws IOException {
+    public void write(HttpServletResponse response, HttpStatus status, String title, String detail, ErrorCode errorCode)
+            throws IOException {
         if (response.isCommitted()) {
             return;
         }

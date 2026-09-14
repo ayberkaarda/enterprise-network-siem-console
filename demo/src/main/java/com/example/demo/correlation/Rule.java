@@ -10,7 +10,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-
 import java.time.Instant;
 
 /**
@@ -86,8 +85,7 @@ public class Rule {
     private Instant createdAt;
 
     /** Required by JPA. */
-    public Rule() {
-    }
+    public Rule() {}
 
     @PrePersist
     void onCreate() {

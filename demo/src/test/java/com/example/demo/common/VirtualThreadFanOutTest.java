@@ -1,6 +1,6 @@
 package com.example.demo.common;
 
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.List;
@@ -8,8 +8,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 /**
  * The point of the fan-out is that a batch of blocking probes costs about as
@@ -77,10 +76,8 @@ class VirtualThreadFanOutTest {
 
     @Test
     void anEmptyOrMissingBatchIsNotAnError() {
-        assertThat(VirtualThreadFanOut.forEach(List.of(), item -> {
-        })).isZero();
-        assertThat(VirtualThreadFanOut.forEach(null, item -> {
-        })).isZero();
+        assertThat(VirtualThreadFanOut.forEach(List.of(), item -> {})).isZero();
+        assertThat(VirtualThreadFanOut.forEach(null, item -> {})).isZero();
     }
 
     private static void sleep(Duration duration) {

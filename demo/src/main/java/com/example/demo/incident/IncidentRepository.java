@@ -1,10 +1,9 @@
 package com.example.demo.incident;
 
+import java.util.Collection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
-
-import java.util.Collection;
 
 @Repository
 public interface IncidentRepository extends JpaRepository<Incident, Long>, JpaSpecificationExecutor<Incident> {
@@ -17,6 +16,5 @@ public interface IncidentRepository extends JpaRepository<Incident, Long>, JpaSp
      * threat level, counted in the database so the live snapshot does not have
      * to load the incident table to filter it.
      */
-    long countByStatusInAndSeverityIn(Collection<IncidentStatus> statuses,
-                                      Collection<Severity> severities);
+    long countByStatusInAndSeverityIn(Collection<IncidentStatus> statuses, Collection<Severity> severities);
 }

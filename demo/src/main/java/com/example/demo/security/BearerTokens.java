@@ -13,8 +13,7 @@ final class BearerTokens {
     static final String HEADER = "Authorization";
     private static final String PREFIX = "Bearer ";
 
-    private BearerTokens() {
-    }
+    private BearerTokens() {}
 
     /** The token, or {@code null} when the header is absent or not a bearer one. */
     static String extract(String headerValue) {
@@ -22,8 +21,7 @@ final class BearerTokens {
             return null;
         }
         String trimmed = headerValue.trim();
-        if (trimmed.length() <= PREFIX.length()
-                || !trimmed.regionMatches(true, 0, PREFIX, 0, PREFIX.length())) {
+        if (trimmed.length() <= PREFIX.length() || !trimmed.regionMatches(true, 0, PREFIX, 0, PREFIX.length())) {
             return null;
         }
         String token = trimmed.substring(PREFIX.length()).trim();

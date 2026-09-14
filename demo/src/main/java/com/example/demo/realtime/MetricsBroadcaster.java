@@ -35,9 +35,10 @@ public class MetricsBroadcaster {
     private final SimpMessagingTemplate messagingTemplate;
     private final SiemMetrics siemMetrics;
 
-    public MetricsBroadcaster(MetricsSnapshotService metricsSnapshotService,
-                              SimpMessagingTemplate messagingTemplate,
-                              SiemMetrics siemMetrics) {
+    public MetricsBroadcaster(
+            MetricsSnapshotService metricsSnapshotService,
+            SimpMessagingTemplate messagingTemplate,
+            SiemMetrics siemMetrics) {
         this.metricsSnapshotService = metricsSnapshotService;
         this.messagingTemplate = messagingTemplate;
         this.siemMetrics = siemMetrics;

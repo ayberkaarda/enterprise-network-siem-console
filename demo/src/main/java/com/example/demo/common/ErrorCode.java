@@ -8,6 +8,7 @@ package com.example.demo.common;
 public enum ErrorCode {
     DEVICE_NOT_FOUND,
     INCIDENT_NOT_FOUND,
+    RULE_NOT_FOUND,
     INVALID_STATE_TRANSITION,
     IP_VALIDATION_FAILURE,
     VALIDATION_FAILURE,

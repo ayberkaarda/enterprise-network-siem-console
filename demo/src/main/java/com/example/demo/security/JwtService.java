@@ -4,17 +4,16 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
+import javax.crypto.SecretKey;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 /**
  * Issues and verifies the two token kinds the console uses.
@@ -53,9 +52,10 @@ public class JwtService {
     // tests to inject a fixed clock, so there is more than one candidate and
     // Spring cannot pick one on its own.
     @Autowired
-    public JwtService(@Value("${siem.jwt.secret}") String secret,
-                      @Value("${siem.jwt.access-token-ttl:PT15M}") Duration accessTokenTtl,
-                      @Value("${siem.jwt.refresh-token-ttl:P7D}") Duration refreshTokenTtl) {
+    public JwtService(
+            @Value("${siem.jwt.secret}") String secret,
+            @Value("${siem.jwt.access-token-ttl:PT15M}") Duration accessTokenTtl,
+            @Value("${siem.jwt.refresh-token-ttl:P7D}") Duration refreshTokenTtl) {
         this(secret, accessTokenTtl, refreshTokenTtl, Clock.systemUTC());
     }
 

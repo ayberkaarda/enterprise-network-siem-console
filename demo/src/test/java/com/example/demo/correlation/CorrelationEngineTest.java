@@ -1,22 +1,5 @@
 package com.example.demo.correlation;
 
-import com.example.demo.anomaly.LatencyBaselineService;
-import com.example.demo.correlation.threatintel.LocalBlocklistProvider;
-import com.example.demo.correlation.threatintel.ThreatIntelProvider;
-import com.example.demo.device.Device;
-import com.example.demo.event.DeviceStatusChangedEvent;
-import com.example.demo.incident.IncidentService;
-import com.example.demo.incident.Severity;
-import com.example.demo.ingestion.IngestedEvent;
-import tools.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -27,6 +10,22 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import com.example.demo.anomaly.LatencyBaselineService;
+import com.example.demo.correlation.threatintel.LocalBlocklistProvider;
+import com.example.demo.correlation.threatintel.ThreatIntelProvider;
+import com.example.demo.device.Device;
+import com.example.demo.event.DeviceStatusChangedEvent;
+import com.example.demo.incident.IncidentService;
+import com.example.demo.incident.Severity;
+import com.example.demo.ingestion.IngestedEvent;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Behavioural tests for the correlation engine.
@@ -53,8 +52,13 @@ class CorrelationEngineTest {
         latencyBaselineService = new LatencyBaselineService();
         threatIntelProvider = new LocalBlocklistProvider(List.of("192.0.2.66", "203.0.113."));
         clock = new MutableClock(START);
-        engine = new CorrelationEngine(ruleRepository, incidentService, latencyBaselineService,
-                threatIntelProvider, new ObjectMapper(), clock);
+        engine = new CorrelationEngine(
+                ruleRepository,
+                incidentService,
+                latencyBaselineService,
+                threatIntelProvider,
+                new ObjectMapper(),
+                clock);
     }
 
     // ------------------------------------------------------------------ flap
@@ -75,8 +79,8 @@ class CorrelationEngineTest {
 
         ArgumentCaptor<String> title = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> description = ArgumentCaptor.forClass(String.class);
-        verify(incidentService, times(1)).create(
-                title.capture(), description.capture(), eq(Severity.MEDIUM), eq(7L), any());
+        verify(incidentService, times(1))
+                .create(title.capture(), description.capture(), eq(Severity.MEDIUM), eq(7L), any());
 
         assertThat(title.getValue()).contains("core-switch");
         assertThat(description.getValue())
@@ -145,9 +149,13 @@ class CorrelationEngineTest {
 
     @Test
     void subnetOutageRuleFiresWhenThreeHostsOnTheSamePrefixGoDown() {
-        loadRules(rule(2L, "Simultaneous subnet outage",
+        loadRules(rule(
+                2L,
+                "Simultaneous subnet outage",
                 "{\"type\":\"subnet_outage\",\"downStatuses\":[\"INACTIVE\"],\"prefixOctets\":3}",
-                3, 120, Severity.HIGH));
+                3,
+                120,
+                Severity.HIGH));
 
         engine.onDeviceEvent(statusChange(device(11L, "rack-a", "10.0.5.11"), "ACTIVE", "INACTIVE", -1L));
         clock.advance(Duration.ofSeconds(10));
@@ -159,16 +167,19 @@ class CorrelationEngineTest {
         engine.onDeviceEvent(statusChange(device(13L, "rack-c", "10.0.5.13"), "ACTIVE", "INACTIVE", -1L));
 
         ArgumentCaptor<String> description = ArgumentCaptor.forClass(String.class);
-        verify(incidentService, times(1))
-                .create(anyString(), description.capture(), eq(Severity.HIGH), any(), any());
+        verify(incidentService, times(1)).create(anyString(), description.capture(), eq(Severity.HIGH), any(), any());
         assertThat(description.getValue()).contains("10.0.5.0/24").contains("3 devices");
     }
 
     @Test
     void subnetOutageRuleIgnoresHostsOnOtherPrefixes() {
-        loadRules(rule(2L, "Simultaneous subnet outage",
+        loadRules(rule(
+                2L,
+                "Simultaneous subnet outage",
                 "{\"type\":\"subnet_outage\",\"downStatuses\":[\"INACTIVE\"],\"prefixOctets\":3}",
-                3, 120, Severity.HIGH));
+                3,
+                120,
+                Severity.HIGH));
 
         engine.onDeviceEvent(statusChange(device(11L, "rack-a", "10.0.5.11"), "ACTIVE", "INACTIVE", -1L));
         engine.onDeviceEvent(statusChange(device(21L, "other-a", "10.0.6.21"), "ACTIVE", "INACTIVE", -1L));
@@ -179,9 +190,13 @@ class CorrelationEngineTest {
 
     @Test
     void subnetOutageRuleIgnoresHostsComingBackUp() {
-        loadRules(rule(2L, "Simultaneous subnet outage",
+        loadRules(rule(
+                2L,
+                "Simultaneous subnet outage",
                 "{\"type\":\"subnet_outage\",\"downStatuses\":[\"INACTIVE\"],\"prefixOctets\":3}",
-                3, 120, Severity.HIGH));
+                3,
+                120,
+                Severity.HIGH));
 
         engine.onDeviceEvent(statusChange(device(11L, "rack-a", "10.0.5.11"), "INACTIVE", "ACTIVE", 8L));
         engine.onDeviceEvent(statusChange(device(12L, "rack-b", "10.0.5.12"), "INACTIVE", "ACTIVE", 8L));
@@ -194,8 +209,8 @@ class CorrelationEngineTest {
 
     @Test
     void latencyRuleFiresOnlyOnceTheDeviceHasABaselineToDeviateFrom() {
-        loadRules(rule(3L, "Latency beyond device baseline",
-                "{\"type\":\"latency_anomaly\"}", 1, 300, Severity.MEDIUM));
+        loadRules(
+                rule(3L, "Latency beyond device baseline", "{\"type\":\"latency_anomaly\"}", 1, 300, Severity.MEDIUM));
         Device device = device(9L, "db-primary", "10.0.9.4");
 
         // Not enough history yet: a spike here is not yet a claim about anything.
@@ -228,8 +243,7 @@ class CorrelationEngineTest {
         engine.onIngestedEvent(ingested("192.0.2.66", "AUTH", Severity.MEDIUM));
 
         ArgumentCaptor<String> title = ArgumentCaptor.forClass(String.class);
-        verify(incidentService, times(1))
-                .create(title.capture(), anyString(), eq(Severity.HIGH), any(), any());
+        verify(incidentService, times(1)).create(title.capture(), anyString(), eq(Severity.HIGH), any(), any());
         assertThat(title.getValue()).contains("192.0.2.66");
     }
 
@@ -244,8 +258,8 @@ class CorrelationEngineTest {
 
     @Test
     void eventBurstRuleFiresOnTheThirdEventFromTheSameSource() {
-        loadRules(rule(4L, "Authentication burst",
-                "{\"type\":\"event_burst\",\"category\":\"AUTH\"}", 3, 60, Severity.HIGH));
+        loadRules(rule(
+                4L, "Authentication burst", "{\"type\":\"event_burst\",\"category\":\"AUTH\"}", 3, 60, Severity.HIGH));
 
         engine.onIngestedEvent(ingested("10.0.0.15", "AUTH", Severity.LOW));
         engine.onIngestedEvent(ingested("10.0.0.15", "AUTH", Severity.LOW));
@@ -253,14 +267,13 @@ class CorrelationEngineTest {
 
         engine.onIngestedEvent(ingested("10.0.0.15", "AUTH", Severity.LOW));
 
-        verify(incidentService, times(1))
-                .create(anyString(), anyString(), eq(Severity.HIGH), any(), any());
+        verify(incidentService, times(1)).create(anyString(), anyString(), eq(Severity.HIGH), any(), any());
     }
 
     @Test
     void eventBurstRuleIgnoresOtherCategoriesAndOtherSources() {
-        loadRules(rule(4L, "Authentication burst",
-                "{\"type\":\"event_burst\",\"category\":\"AUTH\"}", 3, 60, Severity.HIGH));
+        loadRules(rule(
+                4L, "Authentication burst", "{\"type\":\"event_burst\",\"category\":\"AUTH\"}", 3, 60, Severity.HIGH));
 
         engine.onIngestedEvent(ingested("10.0.0.15", "AUTH", Severity.LOW));
         engine.onIngestedEvent(ingested("10.0.0.15", "NETFLOW", Severity.LOW));
@@ -288,7 +301,8 @@ class CorrelationEngineTest {
 
     @Test
     void unreadableConditionIsSkippedRatherThanTakingTheEngineDown() {
-        loadRules(rule(1L, "Broken", "not json at all", 3, 300, Severity.MEDIUM),
+        loadRules(
+                rule(1L, "Broken", "not json at all", 3, 300, Severity.MEDIUM),
                 rule(2L, "Device flapping", "{\"type\":\"flap\"}", 2, 300, Severity.LOW));
 
         assertThat(engine.activeRuleCount()).isEqualTo(1);
@@ -297,8 +311,7 @@ class CorrelationEngineTest {
         engine.onDeviceEvent(statusChange(device, "ACTIVE", "INACTIVE", 12L));
         engine.onDeviceEvent(statusChange(device, "INACTIVE", "ACTIVE", 12L));
 
-        verify(incidentService, times(1))
-                .create(anyString(), anyString(), eq(Severity.LOW), any(), any());
+        verify(incidentService, times(1)).create(anyString(), anyString(), eq(Severity.LOW), any(), any());
     }
 
     @Test
@@ -327,8 +340,8 @@ class CorrelationEngineTest {
         engine.reloadRules();
     }
 
-    private static Rule rule(Long id, String name, String conditionJson,
-                             int thresholdCount, int windowSeconds, Severity severity) {
+    private static Rule rule(
+            Long id, String name, String conditionJson, int thresholdCount, int windowSeconds, Severity severity) {
         Rule rule = new Rule();
         rule.setId(id);
         rule.setName(name);

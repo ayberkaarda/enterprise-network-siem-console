@@ -1,12 +1,11 @@
 package com.example.demo.common;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
-
 import java.net.URI;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 
 /**
  * Single place where the RFC 7807 body of this service is shaped.
@@ -24,8 +23,7 @@ public final class ProblemDetails {
     public static final String PROPERTY_ERROR_CODE = "errorCode";
     public static final String PROPERTY_TIMESTAMP = "timestamp";
 
-    private ProblemDetails() {
-    }
+    private ProblemDetails() {}
 
     public static ProblemDetail of(HttpStatus status, String title, String detail, ErrorCode errorCode) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);

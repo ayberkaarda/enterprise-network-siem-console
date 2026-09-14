@@ -3,11 +3,10 @@ package com.example.demo.event;
 import com.example.demo.common.AuditActor;
 import com.example.demo.common.AuditLog;
 import com.example.demo.common.AuditLogRepository;
+import java.time.LocalDateTime;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
 
 @Component
 public class NetworkEventListener {
@@ -25,9 +24,10 @@ public class NetworkEventListener {
     public void handleDeviceStatusChanged(DeviceStatusChangedEvent event) {
         // 1. Log Mesajını Hazırlama
         String latencyStr = event.getLatency() >= 0 ? event.getLatency() + " ms" : "N/A";
-        String logMessage = "Cihaz: " + event.getDevice().getName() + " [" + event.getDevice().getIpAddress() +
-                "] durumu '" + event.getOldStatus() + "' değerinden '" + event.getNewStatus() +
-                "' değerine değişti. (Gecikme: " + latencyStr + ")";
+        String logMessage = "Cihaz: " + event.getDevice().getName() + " ["
+                + event.getDevice().getIpAddress() + "] durumu '"
+                + event.getOldStatus() + "' değerinden '" + event.getNewStatus() + "' değerine değişti. (Gecikme: "
+                + latencyStr + ")";
 
         // 2. Veritabanına Kalıcı Olarak Kaydetme (Senin yazdığın kısım)
         AuditLog log = new AuditLog(logMessage, LocalDateTime.now(), AuditActor.current());

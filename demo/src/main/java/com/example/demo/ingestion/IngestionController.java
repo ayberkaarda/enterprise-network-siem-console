@@ -29,10 +29,11 @@ public class IngestionController {
     private final CorrelationEngine correlationEngine;
     private final SiemMetrics siemMetrics;
 
-    public IngestionController(IngestedEventRepository ingestedEventRepository,
-                               IngestedEventMapper ingestedEventMapper,
-                               CorrelationEngine correlationEngine,
-                               SiemMetrics siemMetrics) {
+    public IngestionController(
+            IngestedEventRepository ingestedEventRepository,
+            IngestedEventMapper ingestedEventMapper,
+            CorrelationEngine correlationEngine,
+            SiemMetrics siemMetrics) {
         this.ingestedEventRepository = ingestedEventRepository;
         this.ingestedEventMapper = ingestedEventMapper;
         this.correlationEngine = correlationEngine;

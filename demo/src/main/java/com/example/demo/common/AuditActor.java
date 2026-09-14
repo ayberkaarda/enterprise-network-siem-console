@@ -19,8 +19,7 @@ public final class AuditActor {
 
     public static final String SYSTEM = "system";
 
-    private AuditActor() {
-    }
+    private AuditActor() {}
 
     public static String current() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

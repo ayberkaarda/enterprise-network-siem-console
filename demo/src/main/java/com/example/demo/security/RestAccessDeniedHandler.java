@@ -3,12 +3,11 @@ package com.example.demo.security;
 import com.example.demo.common.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 /**
  * Answer to an authenticated caller whose role does not allow the action:
@@ -28,9 +27,14 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response,
-                       AccessDeniedException accessDeniedException) throws IOException {
-        problemResponseWriter.write(response, HttpStatus.FORBIDDEN, "Insufficient role",
-                "Your role does not permit this action.", ErrorCode.INSUFFICIENT_ROLE);
+    public void handle(
+            HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException)
+            throws IOException {
+        problemResponseWriter.write(
+                response,
+                HttpStatus.FORBIDDEN,
+                "Insufficient role",
+                "Your role does not permit this action.",
+                ErrorCode.INSUFFICIENT_ROLE);
     }
 }

@@ -1,8 +1,7 @@
 package com.example.demo.common;
 
-import org.springframework.data.jpa.domain.Specification;
-
 import java.time.LocalDateTime;
+import org.springframework.data.jpa.domain.Specification;
 
 /**
  * Reusable {@link Specification} building blocks for dynamic audit log queries.
@@ -11,8 +10,7 @@ import java.time.LocalDateTime;
  */
 public final class AuditLogSpecifications {
 
-    private AuditLogSpecifications() {
-    }
+    private AuditLogSpecifications() {}
 
     public static Specification<AuditLog> timestampBetween(LocalDateTime from, LocalDateTime to) {
         if (from == null && to == null) {

@@ -1,7 +1,6 @@
 package com.example.demo.incident;
 
 import com.example.demo.common.IllegalStateTransitionException;
-
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
@@ -21,8 +20,7 @@ public final class IncidentStateMachine {
 
     private static final Map<IncidentStatus, Set<IncidentStatus>> ALLOWED = buildAllowedTransitions();
 
-    private IncidentStateMachine() {
-    }
+    private IncidentStateMachine() {}
 
     private static Map<IncidentStatus, Set<IncidentStatus>> buildAllowedTransitions() {
         Map<IncidentStatus, Set<IncidentStatus>> allowed = new EnumMap<>(IncidentStatus.class);
@@ -58,8 +56,7 @@ public final class IncidentStateMachine {
      */
     public static void validateTransition(IncidentStatus from, IncidentStatus to) {
         if (!canTransition(from, to)) {
-            throw new IllegalStateTransitionException(
-                    "Cannot transition incident from " + from + " to " + to);
+            throw new IllegalStateTransitionException("Cannot transition incident from " + from + " to " + to);
         }
     }
 }

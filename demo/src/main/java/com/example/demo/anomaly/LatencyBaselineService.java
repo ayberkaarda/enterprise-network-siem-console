@@ -1,14 +1,13 @@
 package com.example.demo.anomaly;
 
 import com.example.demo.event.DeviceStatusChangedEvent;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 /**
  * Per-device latency baseline, maintained with an exponentially weighted moving

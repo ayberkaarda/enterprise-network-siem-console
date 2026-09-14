@@ -33,10 +33,10 @@ public class AdminUserBootstrap implements ApplicationRunner {
     private final PasswordEncoder passwordEncoder;
     private final String adminPassword;
 
-    public AdminUserBootstrap(UserRepository userRepository,
-                              PasswordEncoder passwordEncoder,
-                              @Value("${siem.bootstrap.admin-password:" + DEV_ONLY_PASSWORD + "}")
-                              String adminPassword) {
+    public AdminUserBootstrap(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            @Value("${siem.bootstrap.admin-password:" + DEV_ONLY_PASSWORD + "}") String adminPassword) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.adminPassword = adminPassword;
@@ -48,13 +48,14 @@ public class AdminUserBootstrap implements ApplicationRunner {
         if (userRepository.count() > 0) {
             return;
         }
-        userRepository.save(new User(
-                DEFAULT_USERNAME, passwordEncoder.encode(adminPassword), Role.ADMIN, true));
+        userRepository.save(new User(DEFAULT_USERNAME, passwordEncoder.encode(adminPassword), Role.ADMIN, true));
 
         if (DEV_ONLY_PASSWORD.equals(adminPassword)) {
-            log.warn("Bootstrapped the '{}' account with the built-in development password. "
-                    + "Set SIEM_ADMIN_PASSWORD and recreate the account before this instance "
-                    + "is reachable by anyone else.", DEFAULT_USERNAME);
+            log.warn(
+                    "Bootstrapped the '{}' account with the built-in development password. "
+                            + "Set SIEM_ADMIN_PASSWORD and recreate the account before this instance "
+                            + "is reachable by anyone else.",
+                    DEFAULT_USERNAME);
         } else {
             log.info("Bootstrapped the '{}' account from the configured password.", DEFAULT_USERNAME);
         }

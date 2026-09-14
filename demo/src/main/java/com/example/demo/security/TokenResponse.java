@@ -8,5 +8,4 @@ package com.example.demo.security;
  * @param expiresIn    lifetime of the access token in seconds, so the client can
  *                     schedule a refresh without having to decode the token
  */
-public record TokenResponse(String accessToken, String refreshToken, long expiresIn) {
-}
+public record TokenResponse(String accessToken, String refreshToken, long expiresIn) {}

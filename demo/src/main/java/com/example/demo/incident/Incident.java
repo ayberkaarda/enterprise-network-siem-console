@@ -9,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
-
 import java.time.Instant;
 
 /**
@@ -58,8 +57,7 @@ public class Incident {
     private Instant updatedAt;
 
     /** Required by JPA. */
-    public Incident() {
-    }
+    public Incident() {}
 
     @PrePersist
     void onCreate() {

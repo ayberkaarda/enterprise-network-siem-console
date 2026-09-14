@@ -8,5 +8,4 @@ import jakarta.validation.constraints.Size;
  */
 public record IncidentCommentRequest(
         @NotBlank @Size(max = 255) String author,
-        @NotBlank @Size(max = 2000) String body) {
-}
+        @NotBlank @Size(max = 2000) String body) {}

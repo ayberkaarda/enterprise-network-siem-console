@@ -1,5 +1,10 @@
 package com.example.demo.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,12 +16,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 /**
  * Covers the token bucket in front of {@code POST /api/v1/events}
@@ -62,11 +61,11 @@ class IngestionRateLimitFilterTest {
         }
 
         assertThat(rejected)
-                .as("burst of %d requests must eventually trip the %d/s bucket, got statuses %s",
+                .as(
+                        "burst of %d requests must eventually trip the %d/s bucket, got statuses %s",
                         BURST_SIZE, 20, statuses)
                 .isNotNull();
         assertThat(rejected.getResponse().getContentAsString()).contains("RATE_LIMIT_EXCEEDED");
-        assertThat(rejected.getResponse().getContentType())
-                .startsWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        assertThat(rejected.getResponse().getContentType()).startsWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
     }
 }

@@ -9,7 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
-
 import java.time.Instant;
 
 /**
@@ -46,8 +45,7 @@ public class IngestedEvent {
     private Instant receivedAt;
 
     /** Required by JPA. */
-    public IngestedEvent() {
-    }
+    public IngestedEvent() {}
 
     @PrePersist
     void onCreate() {

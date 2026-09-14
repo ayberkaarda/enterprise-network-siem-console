@@ -1,6 +1,7 @@
 package com.example.demo.incident;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * Incident lifecycle API. Failures are reported as RFC 7807 problem documents
@@ -34,11 +33,11 @@ public class IncidentController {
     }
 
     @GetMapping
-    public Page<IncidentResponse> getIncidents(@RequestParam(required = false) IncidentStatus status,
-                                               @RequestParam(required = false) Severity severity,
-                                               Pageable pageable) {
-        return incidentService.findWithFilters(status, severity, pageable)
-                .map(incidentMapper::toResponse);
+    public Page<IncidentResponse> getIncidents(
+            @RequestParam(required = false) IncidentStatus status,
+            @RequestParam(required = false) Severity severity,
+            Pageable pageable) {
+        return incidentService.findWithFilters(status, severity, pageable).map(incidentMapper::toResponse);
     }
 
     @PostMapping
@@ -54,8 +53,8 @@ public class IncidentController {
 
     @PostMapping("/{id}/transition")
     @PreAuthorize("hasAnyRole('ANALYST','ADMIN')")
-    public IncidentResponse transitionIncident(@PathVariable Long id,
-                                               @Valid @RequestBody IncidentTransitionRequest request) {
+    public IncidentResponse transitionIncident(
+            @PathVariable Long id, @Valid @RequestBody IncidentTransitionRequest request) {
         return incidentMapper.toResponse(incidentService.transition(id, request.newStatus()));
     }
 
@@ -68,8 +67,8 @@ public class IncidentController {
 
     @PostMapping("/{id}/comments")
     @PreAuthorize("hasAnyRole('ANALYST','ADMIN')")
-    public ResponseEntity<IncidentCommentResponse> addComment(@PathVariable Long id,
-                                                              @Valid @RequestBody IncidentCommentRequest request) {
+    public ResponseEntity<IncidentCommentResponse> addComment(
+            @PathVariable Long id, @Valid @RequestBody IncidentCommentRequest request) {
         IncidentComment saved = incidentService.addComment(id, request.author(), request.body());
         return ResponseEntity.status(HttpStatus.CREATED).body(incidentMapper.toCommentResponse(saved));
     }

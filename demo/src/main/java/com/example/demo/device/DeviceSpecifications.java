@@ -10,8 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
  */
 public final class DeviceSpecifications {
 
-    private DeviceSpecifications() {
-    }
+    private DeviceSpecifications() {}
 
     public static Specification<Device> hasStatus(String status) {
         if (!hasText(status)) {
@@ -38,9 +37,7 @@ public final class DeviceSpecifications {
      * Combines every supported device filter; null or blank criteria are skipped.
      */
     public static Specification<Device> filterBy(String status, String deviceType, String ipPrefix) {
-        return Specification.where(hasStatus(status))
-                .and(hasType(deviceType))
-                .and(ipPrefixStartsWith(ipPrefix));
+        return Specification.where(hasStatus(status)).and(hasType(deviceType)).and(ipPrefixStartsWith(ipPrefix));
     }
 
     private static boolean hasText(String value) {

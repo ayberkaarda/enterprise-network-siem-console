@@ -6,14 +6,13 @@ import com.example.demo.common.AuditLogRepository;
 import com.example.demo.common.IncidentNotFoundException;
 import com.example.demo.realtime.IncidentChangedEvent;
 import com.example.demo.realtime.IncidentRealtimeEvent;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Owns the incident lifecycle. Every state change goes through
@@ -33,10 +32,11 @@ public class IncidentService {
     private final AuditLogRepository auditLogRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    public IncidentService(IncidentRepository incidentRepository,
-                           IncidentCommentRepository incidentCommentRepository,
-                           AuditLogRepository auditLogRepository,
-                           ApplicationEventPublisher eventPublisher) {
+    public IncidentService(
+            IncidentRepository incidentRepository,
+            IncidentCommentRepository incidentCommentRepository,
+            AuditLogRepository auditLogRepository,
+            ApplicationEventPublisher eventPublisher) {
         this.incidentRepository = incidentRepository;
         this.incidentCommentRepository = incidentCommentRepository;
         this.auditLogRepository = auditLogRepository;
@@ -55,8 +55,7 @@ public class IncidentService {
             incident.setSeverity(Severity.MEDIUM);
         }
         Incident saved = incidentRepository.save(incident);
-        audit("Incident #" + saved.getId() + " opened with severity " + saved.getSeverity()
-                + ": " + saved.getTitle());
+        audit("Incident #" + saved.getId() + " opened with severity " + saved.getSeverity() + ": " + saved.getTitle());
         announce(saved);
         return saved;
     }
@@ -66,11 +65,8 @@ public class IncidentService {
      * attack simulations) that build an incident from a handful of values.
      */
     @Transactional
-    public Incident create(String title,
-                           String description,
-                           Severity severity,
-                           Long sourceDeviceId,
-                           String mitreTechniqueId) {
+    public Incident create(
+            String title, String description, Severity severity, Long sourceDeviceId, String mitreTechniqueId) {
         Incident incident = new Incident();
         incident.setTitle(title);
         incident.setDescription(description);
@@ -82,7 +78,8 @@ public class IncidentService {
 
     @Transactional(readOnly = true)
     public Incident getById(Long id) {
-        return incidentRepository.findById(id)
+        return incidentRepository
+                .findById(id)
                 .orElseThrow(() -> new IncidentNotFoundException("Incident " + id + " not found"));
     }
 
@@ -92,12 +89,9 @@ public class IncidentService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Incident> findWithFilters(IncidentStatus status,
-                                          Severity severity,
-                                          Long sourceDeviceId,
-                                          Pageable pageable) {
-        return incidentRepository.findAll(
-                IncidentSpecifications.filterBy(status, severity, sourceDeviceId), pageable);
+    public Page<Incident> findWithFilters(
+            IncidentStatus status, Severity severity, Long sourceDeviceId, Pageable pageable) {
+        return incidentRepository.findAll(IncidentSpecifications.filterBy(status, severity, sourceDeviceId), pageable);
     }
 
     /**
@@ -127,8 +121,7 @@ public class IncidentService {
     @Transactional
     public IncidentComment addComment(Long incidentId, String author, String body) {
         Incident incident = getById(incidentId);
-        IncidentComment comment = incidentCommentRepository.save(
-                new IncidentComment(incident.getId(), author, body));
+        IncidentComment comment = incidentCommentRepository.save(new IncidentComment(incident.getId(), author, body));
         audit("Incident #" + incident.getId() + " commented on by " + author);
         return comment;
     }

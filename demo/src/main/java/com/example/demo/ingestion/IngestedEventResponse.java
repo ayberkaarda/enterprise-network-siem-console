@@ -1,7 +1,6 @@
 package com.example.demo.ingestion;
 
 import com.example.demo.incident.Severity;
-
 import java.time.Instant;
 
 /**
@@ -14,5 +13,4 @@ public record IngestedEventResponse(
         Severity severity,
         String rawPayload,
         Instant occurredAt,
-        Instant receivedAt) {
-}
+        Instant receivedAt) {}

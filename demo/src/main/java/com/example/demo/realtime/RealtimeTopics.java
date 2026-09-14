@@ -24,6 +24,5 @@ public final class RealtimeTopics {
      */
     public static final String ALERTS = "/topic/alerts";
 
-    private RealtimeTopics() {
-    }
+    private RealtimeTopics() {}
 }

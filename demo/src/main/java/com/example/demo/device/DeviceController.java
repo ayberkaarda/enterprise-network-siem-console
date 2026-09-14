@@ -2,10 +2,9 @@ package com.example.demo.device;
 
 import com.example.demo.common.AuditLog;
 import com.example.demo.common.AuditLogRepository;
+import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Legacy device API kept for the currently deployed frontend. The response

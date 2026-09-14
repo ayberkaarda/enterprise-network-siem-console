@@ -1,11 +1,10 @@
 package com.example.demo.correlation.threatintel;
 
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 class LocalBlocklistProviderTest {
 
@@ -37,8 +36,7 @@ class LocalBlocklistProviderTest {
 
     @Test
     void emptyAndPaddedEntriesAreDiscardedRatherThanMatchingEverything() {
-        LocalBlocklistProvider provider =
-                new LocalBlocklistProvider(Arrays.asList("  192.0.2.66  ", "", "   ", null));
+        LocalBlocklistProvider provider = new LocalBlocklistProvider(Arrays.asList("  192.0.2.66  ", "", "   ", null));
 
         assertThat(provider.size()).isEqualTo(1);
         assertThat(provider.isKnownBad("192.0.2.66")).isTrue();
