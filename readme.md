@@ -30,6 +30,8 @@ running as a single deployable service plus its supporting infrastructure
 - [Monitoring](#monitoring)
 - [Architecture decisions](#architecture-decisions)
 - [Security notes](#security-notes)
+- [Screenshots](#screenshots)
+- [License](#license)
 
 ## Architecture
 
@@ -303,6 +305,25 @@ Larger, harder-to-reverse choices are recorded under `docs/adr/`:
 - `/actuator/prometheus` is intentionally left unauthenticated — it is only
   reachable from Prometheus over the private `docker-compose` network, never
   a public interface. Revisit this if that network assumption ever changes.
+
+## Screenshots
+
+| | |
+|---|---|
+| **Login** | ![Login screen](docs/screenshots/login.jpg) |
+| **Overview** — live threat level, KPI cards, trend/severity/uptime charts | ![Overview dashboard](docs/screenshots/overview.jpg) |
+| **Devices** — inventory, actions, per-device latency history | ![Devices view with latency history](docs/screenshots/devices.jpg) |
+| **Incidents** — lifecycle actions and a comment thread | ![Incidents view with a comment thread](docs/screenshots/incidents.jpg) |
+| **Rules** — correlation rule CRUD | ![Rules management screen](docs/screenshots/rules.jpg) |
+
+## License
+
+Dual-licensed under either of
+
+- [MIT License](LICENSE-MIT)
+- [Apache License, Version 2.0](LICENSE-APACHE)
+
+at your option.
 
 ---
 

@@ -32,6 +32,8 @@ mesaj kuyruğu veya mikroservis mimarisi yok.
 - [İzleme (Monitoring)](#i̇zleme-monitoring)
 - [Mimari kararlar](#mimari-kararlar)
 - [Güvenlik notları](#güvenlik-notları)
+- [Ekran Görüntüleri](#ekran-görüntüleri)
+- [Lisans](#lisans)
 
 ## Mimari
 
@@ -310,6 +312,25 @@ Daha büyük, geri alınması daha zor kararlar `docs/adr/` altında kayıtlıd�
   Prometheus'tan özel `docker-compose` ağı üzerinden erişilebilir, hiçbir
   zaman genel bir arayüzden değil. Bu ağ varsayımı değişirse bu yeniden
   gözden geçirilmelidir.
+
+## Ekran Görüntüleri
+
+| | |
+|---|---|
+| **Giriş** | ![Giriş ekranı](docs/screenshots/login.jpg) |
+| **Genel Bakış** — canlı tehdit seviyesi, KPI kartları, trend/önem derecesi/uptime grafikleri | ![Genel Bakış gösterge paneli](docs/screenshots/overview.jpg) |
+| **Cihazlar** — envanter, aksiyonlar, cihaz başına gecikme geçmişi | ![Gecikme geçmişi ile Cihazlar görünümü](docs/screenshots/devices.jpg) |
+| **Olaylar** — yaşam döngüsü aksiyonları ve yorum akışı | ![Yorum akışı ile Olaylar görünümü](docs/screenshots/incidents.jpg) |
+| **Kurallar** — korelasyon kuralı CRUD'u | ![Kural yönetimi ekranı](docs/screenshots/rules.jpg) |
+
+## Lisans
+
+Aşağıdakilerden herhangi biri altında çift lisanslıdır:
+
+- [MIT Lisansı](LICENSE-MIT)
+- [Apache Lisansı, Sürüm 2.0](LICENSE-APACHE)
+
+tercihinize bağlı olarak.
 
 ---
 
