@@ -1,0 +1,87 @@
+/* ==========================================================================
+   Incident comment thread, embedded inline in one incident card. Layout
+   only — colours come from the shared design tokens through the existing
+   .field/.btn/.inline-error/.state-box classes and the custom properties
+   referenced directly below.
+   ========================================================================== */
+
+.comments-toggle-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.comments-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+  padding: var(--s-3) var(--s-2);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comment-item {
+  padding: var(--s-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+}
+
+.comment-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-bottom: 4px;
+}
+
+.comment-author {
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+}
+
+.comment-body {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.comment-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 44px;
+}
+
+.comment-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.comment-readonly-hint {
+  margin: 0;
+}

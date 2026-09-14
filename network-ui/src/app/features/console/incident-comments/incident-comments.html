@@ -1,0 +1,82 @@
+<div class="comments-toggle-row">
+  <button type="button" class="btn btn-sm" (click)="toggleExpanded()">
+    {{ expanded ? 'Yorumları Gizle' : 'Yorumlar' }}{{
+      loaded && comments.length > 0 ? ' · ' + comments.length : ''
+    }}
+  </button>
+</div>
+
+@if (expanded) {
+  <div class="comments-drawer">
+    @if (error) {
+      <p class="inline-error" role="alert">
+        <span>{{ error }}</span>
+        <button class="btn btn-sm" type="button" (click)="dismissError()">Kapat</button>
+      </p>
+    }
+
+    @if (loading) {
+      <div class="state-box">
+        <div class="glyph">[ … ]</div>
+        <h4>Yükleniyor</h4>
+        <p>Olay yorumları okunuyor.</p>
+      </div>
+    }
+
+    @if (!loading && loaded && !error) {
+      @if (comments.length === 0) {
+        <div class="state-box">
+          <div class="glyph">[ 0 ]</div>
+          <h4>Yorum yok</h4>
+          <p>Bu olay için henüz bir yorum eklenmedi.</p>
+        </div>
+      } @else {
+        <ul class="comment-list">
+          @for (c of comments; track c.id) {
+            <li class="comment-item">
+              <div class="comment-meta">
+                <span class="mono comment-author">{{ c.author }}</span>
+                <span class="faint mono">{{ c.createdAt | date: 'dd.MM HH:mm:ss' }}</span>
+              </div>
+              <p class="comment-body">{{ c.body }}</p>
+            </li>
+          }
+        </ul>
+      }
+    }
+
+    @if (canRespond) {
+      <form class="comment-form" (ngSubmit)="submit()">
+        <label class="field-group">
+          <span class="label">Yorum ekle · {{ authorUsername }}</span>
+          <textarea
+            [(ngModel)]="formBody"
+            name="commentBody"
+            class="field comment-input"
+            rows="2"
+            [disabled]="submitting"
+            placeholder="Bulgu, aksiyon ya da not ekleyin…"
+            aria-label="Yorum metni"
+          ></textarea>
+        </label>
+        @if (submitError) {
+          <p class="inline-error" role="alert">
+            <span>{{ submitError }}</span>
+            <button class="btn btn-sm" type="button" (click)="dismissSubmitError()">Kapat</button>
+          </p>
+        }
+        <div class="comment-form-actions">
+          <button
+            type="submit"
+            class="btn btn-sm btn-primary"
+            [disabled]="submitting || !formBody.trim()"
+          >
+            {{ submitting ? 'GÖNDERİLİYOR…' : 'Yorum Ekle' }}
+          </button>
+        </div>
+      </form>
+    } @else {
+      <p class="faint comment-readonly-hint" [title]="roleHint">{{ roleHint }}</p>
+    }
+  </div>
+}

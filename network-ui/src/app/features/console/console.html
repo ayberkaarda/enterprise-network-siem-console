@@ -1,5 +1,4 @@
 <div class="shell">
-
   <!-- ============================ SOL RAY (NAVIGASYON) ============================ -->
   <aside class="sidebar">
     <div class="brand">
@@ -15,10 +14,10 @@
 
       <a class="nav-item" href="#view-overview">
         <svg viewBox="0 0 16 16" aria-hidden="true">
-          <rect x="1.5" y="1.5" width="5" height="5"/>
-          <rect x="9.5" y="1.5" width="5" height="5"/>
-          <rect x="1.5" y="9.5" width="5" height="5"/>
-          <rect x="9.5" y="9.5" width="5" height="5"/>
+          <rect x="1.5" y="1.5" width="5" height="5" />
+          <rect x="9.5" y="1.5" width="5" height="5" />
+          <rect x="1.5" y="9.5" width="5" height="5" />
+          <rect x="9.5" y="9.5" width="5" height="5" />
         </svg>
         <span>Genel Bakış</span>
         <span class="nav-count"></span>
@@ -26,9 +25,9 @@
 
       <a class="nav-item" href="#view-devices">
         <svg viewBox="0 0 16 16" aria-hidden="true">
-          <rect x="1.5" y="3" width="13" height="4"/>
-          <rect x="1.5" y="9" width="13" height="4"/>
-          <path d="M4 5h.01M4 11h.01"/>
+          <rect x="1.5" y="3" width="13" height="4" />
+          <rect x="1.5" y="9" width="13" height="4" />
+          <path d="M4 5h.01M4 11h.01" />
         </svg>
         <span>Cihazlar</span>
         <span class="nav-count">{{ totalDevices }}</span>
@@ -38,18 +37,30 @@
 
       <a class="nav-item" href="#view-incidents">
         <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M8 1.5 14.5 13h-13z"/>
-          <path d="M8 6v3.5M8 11.5v.01"/>
+          <path d="M8 1.5 14.5 13h-13z" />
+          <path d="M8 6v3.5M8 11.5v.01" />
         </svg>
         <span>Olaylar</span>
-        <span class="nav-count" [class.hot]="activeIncidents.length > 0">{{ activeIncidents.length }}</span>
+        <span class="nav-count" [class.hot]="activeIncidents.length > 0">{{
+          activeIncidents.length
+        }}</span>
+      </a>
+
+      <div class="nav-group label">Yönetim</div>
+
+      <a class="nav-item" href="#view-rules">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8 1.5 9.3 4l2.7.4-2 1.9.5 2.7L8 7.7 5.5 9l.5-2.7-2-1.9L6.7 4z" />
+        </svg>
+        <span>Kurallar</span>
+        <span class="nav-count"></span>
       </a>
 
       <div class="nav-group label">Sistem</div>
 
       <a class="nav-item" href="#view-logs">
         <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M1.5 8h3l2-5 3 10 2-5h3"/>
+          <path d="M1.5 8h3l2-5 3 10 2-5h3" />
         </svg>
         <span>Denetim Kaydı</span>
         <span class="nav-count">{{ logs.length }}</span>
@@ -57,29 +68,44 @@
     </nav>
 
     <div class="sidebar-foot">
-      <div>ERİŞİLEBİLİR <b>{{ activeDevices }}/{{ totalDevices }}</b></div>
-      <div>ORT. YANIT <b>{{ avgLatency }} ms</b></div>
-      <div>TEHDİT <b>{{ threatLevel.label }}</b></div>
+      <div>
+        ERİŞİLEBİLİR <b>{{ activeDevices }}/{{ totalDevices }}</b>
+      </div>
+      <div>
+        ORT. YANIT <b>{{ avgLatency }} ms</b>
+      </div>
+      <div>
+        TEHDİT <b>{{ threatLevel.label }}</b>
+      </div>
     </div>
   </aside>
 
   <!-- ============================ ANA SÜTUN ============================ -->
   <div class="main">
-
     <header class="topbar">
       <div class="crumb">
         <span class="label">İzleme /</span>
         <h1>Ağ Cihazı Durum İzleyici</h1>
       </div>
       <div class="top-right">
-        <span class="live" [ngClass]="connectionClass" [title]="connectionLabel">{{ connectionLabel }}</span>
-        <span class="status" [ngClass]="{
-          'status-up': inactiveDevices === 0 && totalDevices > 0,
-          'status-warn': inactiveDevices > 0,
-          'status-unk': totalDevices === 0
-        }">{{ activeDevices }}/{{ totalDevices }} erişilebilir</span>
-        <button (click)="scanAll()" class="btn btn-primary" [disabled]="isScanning || !canRespond"
-                [title]="roleHint">
+        <span class="live" [ngClass]="connectionClass" [title]="connectionLabel">{{
+          connectionLabel
+        }}</span>
+        <span
+          class="status"
+          [ngClass]="{
+            'status-up': inactiveDevices === 0 && totalDevices > 0,
+            'status-warn': inactiveDevices > 0,
+            'status-unk': totalDevices === 0,
+          }"
+          >{{ activeDevices }}/{{ totalDevices }} erişilebilir</span
+        >
+        <button
+          (click)="scanAll()"
+          class="btn btn-primary"
+          [disabled]="isScanning || !canRespond"
+          [title]="roleHint"
+        >
           {{ isScanning ? 'AĞ TARANIYOR…' : 'TÜM AĞI TARA' }}
         </button>
 
@@ -92,10 +118,8 @@
     </header>
 
     <main class="content">
-
       <!-- ======================== GENEL BAKIŞ ======================== -->
       <section class="view stack" id="view-overview" aria-label="Genel bakış">
-
         <div class="panel">
           <div class="panel-head">
             <h2 class="panel-title">Sistem Tehdit Durumu</h2>
@@ -104,7 +128,9 @@
           <div class="panel-body threat">
             <div class="threat-left">
               <div class="meter" [ngClass]="'band-' + threatLevel.band" aria-hidden="true">
-                <i *ngFor="let seg of meterSegments; let i = index" [class.on]="i < meterLit"></i>
+                @for (seg of meterSegments; track seg; let i = $index) {
+                  <i [class.on]="i < meterLit"></i>
+                }
               </div>
               <div class="meter-scale">
                 <span>NOMİNAL · 0%</span><span>UYARI</span><span>KRİTİK · 50%+</span>
@@ -117,7 +143,9 @@
             </div>
             <div class="threat-readout">
               <div class="label">Mevcut bant</div>
-              <div class="threat-band" [ngClass]="'band-' + threatLevel.band">{{ threatLevel.label }}</div>
+              <div class="threat-band" [ngClass]="'band-' + threatLevel.band">
+                {{ threatLevel.label }}
+              </div>
               <div class="mono faint">{{ threatLevel.detail }}</div>
             </div>
           </div>
@@ -131,7 +159,9 @@
           </div>
           <div class="kpi is-ok" role="listitem">
             <div class="label">Erişilebilir</div>
-            <div class="kpi-value">{{ activeDevices }}<small>/ {{ totalDevices }}</small></div>
+            <div class="kpi-value">
+              {{ activeDevices }}<small>/ {{ totalDevices }}</small>
+            </div>
             <div class="kpi-delta"><span class="status status-up">aktif</span></div>
           </div>
           <div class="kpi" [class.is-critical]="inactiveDevices > 0" role="listitem">
@@ -149,11 +179,46 @@
             <div class="kpi-delta">erişilebilir cihazların ortalaması</div>
           </div>
         </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">Trend ve Dağılım Analizi</h2>
+            <span class="label"
+              >son 14 gün · mevcut olay/cihaz verisinden istemci tarafında türetilir</span
+            >
+          </div>
+          <div class="panel-body analytics-grid">
+            <div class="analytics-cell">
+              <div class="label">Günlük Olay Trendi</div>
+              <app-bar-chart
+                [data]="incidentTrendData"
+                orientation="vertical"
+                emptyLabel="Son 14 günde olay yok"
+              ></app-bar-chart>
+            </div>
+            <div class="analytics-cell">
+              <div class="label">Şiddet Dağılımı</div>
+              <app-bar-chart
+                [data]="severityDistributionData"
+                orientation="horizontal"
+                emptyLabel="Kayıtlı olay yok"
+              ></app-bar-chart>
+            </div>
+            <div class="analytics-cell">
+              <div class="label">Cihaz Tipine Göre Erişilebilirlik</div>
+              <app-bar-chart
+                [data]="deviceTypeUptimeData"
+                orientation="horizontal"
+                valueSuffix="%"
+                emptyLabel="Kayıtlı cihaz yok"
+              ></app-bar-chart>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- ======================== CİHAZLAR ======================== -->
       <section class="view stack" id="view-devices" aria-label="Cihazlar">
-
         <!-- Yeni düğüm kaydı -->
         <div class="panel">
           <div class="panel-head">
@@ -164,13 +229,21 @@
             <div class="filters form-row">
               <label class="search">
                 <span class="faint mono">&gt;</span>
-                <input type="text" [(ngModel)]="deviceName" placeholder="cihaz adı (örn: DB-Core-01)"
-                       aria-label="Cihaz adı">
+                <input
+                  type="text"
+                  [(ngModel)]="deviceName"
+                  placeholder="cihaz adı (örn: DB-Core-01)"
+                  aria-label="Cihaz adı"
+                />
               </label>
               <label class="search">
                 <span class="faint mono">&gt;</span>
-                <input type="text" [(ngModel)]="deviceIp" placeholder="ıp adresi (örn: 10.0.0.4)"
-                       aria-label="IP adresi">
+                <input
+                  type="text"
+                  [(ngModel)]="deviceIp"
+                  placeholder="ıp adresi (örn: 10.0.0.4)"
+                  aria-label="IP adresi"
+                />
               </label>
               <span class="select">
                 <select [(ngModel)]="selectedType" class="field" aria-label="Cihaz tipi">
@@ -180,7 +253,9 @@
                   <option value="SWITCH">SWITCH</option>
                 </select>
               </span>
-              <button (click)="createDevice()" class="btn btn-primary btn-sm">Sisteme Kaydet</button>
+              <button (click)="createDevice()" class="btn btn-primary btn-sm">
+                Sisteme Kaydet
+              </button>
             </div>
           </div>
         </div>
@@ -188,99 +263,204 @@
         <!-- Cihaz envanteri -->
         <div class="panel">
           <div class="filters">
-            <button class="chip" [attr.aria-pressed]="statusFilter === 'ALL'"
-                    (click)="statusFilter = 'ALL'">Tümü · {{ totalDevices }}</button>
-            <button class="chip" [attr.aria-pressed]="statusFilter === 'ACTIVE'"
-                    (click)="statusFilter = 'ACTIVE'">Erişilebilir · {{ activeDevices }}</button>
-            <button class="chip" [attr.aria-pressed]="statusFilter === 'INACTIVE'"
-                    (click)="statusFilter = 'INACTIVE'">Erişilemez · {{ inactiveDevices }}</button>
-            <span class="sev sev-info" *ngIf="!canRespond" [title]="roleHint">
-              salt okunur · {{ sessionRole }}
-            </span>
+            <button
+              class="chip"
+              [attr.aria-pressed]="statusFilter === 'ALL'"
+              (click)="statusFilter = 'ALL'"
+            >
+              Tümü · {{ totalDevices }}
+            </button>
+            <button
+              class="chip"
+              [attr.aria-pressed]="statusFilter === 'ACTIVE'"
+              (click)="statusFilter = 'ACTIVE'"
+            >
+              Erişilebilir · {{ activeDevices }}
+            </button>
+            <button
+              class="chip"
+              [attr.aria-pressed]="statusFilter === 'INACTIVE'"
+              (click)="statusFilter = 'INACTIVE'"
+            >
+              Erişilemez · {{ inactiveDevices }}
+            </button>
+            @if (!canRespond) {
+              <span class="sev sev-info" [title]="roleHint"> salt okunur · {{ sessionRole }} </span>
+            }
             <label class="search push-right">
               <span class="faint mono">&gt;</span>
-              <input type="text" [(ngModel)]="searchTerm" placeholder="cihaz adı veya ıp ile filtrele…"
-                     aria-label="Cihaz filtrele">
+              <input
+                type="text"
+                [(ngModel)]="searchTerm"
+                placeholder="cihaz adı veya ıp ile filtrele…"
+                aria-label="Cihaz filtrele"
+              />
             </label>
           </div>
 
           <div class="table-wrap">
             <table>
               <thead>
-              <tr>
-                <th>ID</th>
-                <th>Cihaz</th>
-                <th>Tip</th>
-                <th>Adres</th>
-                <th class="r">Gecikme</th>
-                <th>Durum</th>
-                <th>Canlı Trend · son 5</th>
-                <th>Aksiyonlar</th>
-              </tr>
+                <tr>
+                  <th>ID</th>
+                  <th>Cihaz</th>
+                  <th>Tip</th>
+                  <th>Adres</th>
+                  <th class="r">Gecikme</th>
+                  <th>Durum</th>
+                  <th>Canlı Trend · son 5</th>
+                  <th>Aksiyonlar</th>
+                </tr>
               </thead>
               <tbody>
-              <tr *ngFor="let device of filteredDevices">
-                <td class="mono faint">#{{ device.id }}</td>
-                <td class="mono dev-name">{{ device.name }}</td>
-                <td class="dim">{{ device.deviceType || 'SERVER' }}</td>
-                <td class="mono">{{ device.ipAddress }}</td>
-                <td class="r mono">
-                  <span *ngIf="device.latency !== undefined && device.latency >= 0">{{ device.latency }} ms</span>
-                  <span *ngIf="device.latency === undefined || device.latency === -1" class="faint">—</span>
-                </td>
-                <td>
-                  <span class="sev" [ngClass]="{
-                    'sev-ok': device.status === 'ACTIVE',
-                    'sev-medium': device.status === 'INACTIVE',
-                    'sev-critical': device.status === 'CRITICAL_THREAT',
-                    'sev-high': device.status === 'AUTH_FAILURE',
-                    'sev-info': device.status !== 'ACTIVE'
-                      && device.status !== 'INACTIVE'
-                      && device.status !== 'CRITICAL_THREAT'
-                      && device.status !== 'AUTH_FAILURE'
-                  }">{{ device.status || 'UNKNOWN' }}</span>
-                </td>
-                <td>
-                  <div class="trend">
-                    <span *ngFor="let hStatus of deviceTrends[device.id || 0]"
-                          class="trend-dot"
-                          [ngClass]="{
-                            'trend-ok': hStatus === 'ACTIVE',
-                            'trend-medium': hStatus === 'INACTIVE',
-                            'trend-critical': hStatus === 'CRITICAL_THREAT',
-                            'trend-high': hStatus === 'AUTH_FAILURE',
-                            'trend-info': hStatus !== 'ACTIVE'
-                              && hStatus !== 'INACTIVE'
-                              && hStatus !== 'CRITICAL_THREAT'
-                              && hStatus !== 'AUTH_FAILURE'
-                          }"
-                          [title]="hStatus"></span>
-                    <span *ngIf="!deviceTrends[device.id || 0] || deviceTrends[device.id || 0].length === 0"
-                          class="faint mono trend-empty">veri bekleniyor…</span>
-                  </div>
-                </td>
-                <td>
-                  <div class="row-actions">
-                    <button (click)="pingDevice(device.id)" class="btn btn-sm"
-                            [disabled]="!canRespond" [title]="roleHint">Anlık Ping</button>
-                    <button (click)="simulateAttack(device.id)" class="btn btn-sm btn-warn"
-                            [disabled]="!canRespond" [title]="roleHint">DDoS / Port Tarama</button>
-                    <button (click)="simulateSshBruteforce(device.id)" class="btn btn-sm btn-warn"
-                            [disabled]="!canRespond" [title]="roleHint">SSH / PAM İhlali</button>
-                    <button (click)="deleteDevice(device.id)" class="btn btn-sm btn-danger"
-                            [disabled]="!canRespond" [title]="roleHint">Sil</button>
-                  </div>
-                </td>
-              </tr>
-              <tr *ngIf="filteredDevices.length === 0">
-                <td colspan="8">
-                  <div class="state-box">
-                    <div class="glyph">[ 0 ]</div>
-                    <h4>Cihaz kaydı yok</h4>
-                    <p>Kriterlere uygun cihaz kaydı tespit edilemedi. Filtreyi genişletin veya yeni bir düğüm ekleyin.</p>
-                  </div>
-                </td>
-              </tr>
+                @for (device of filteredDevices; track device) {
+                  <tr>
+                    <td class="mono faint">#{{ device.id }}</td>
+                    <td class="mono dev-name">{{ device.name }}</td>
+                    <td class="dim">{{ device.deviceType || 'SERVER' }}</td>
+                    <td class="mono">{{ device.ipAddress }}</td>
+                    <td class="r mono">
+                      @if (device.latency !== undefined && device.latency >= 0) {
+                        <span>{{ device.latency }} ms</span>
+                      }
+                      @if (device.latency === undefined || device.latency === -1) {
+                        <span class="faint">—</span>
+                      }
+                    </td>
+                    <td>
+                      <span
+                        class="sev"
+                        [ngClass]="{
+                          'sev-ok': device.status === 'ACTIVE',
+                          'sev-medium': device.status === 'INACTIVE',
+                          'sev-critical': device.status === 'CRITICAL_THREAT',
+                          'sev-high': device.status === 'AUTH_FAILURE',
+                          'sev-info':
+                            device.status !== 'ACTIVE' &&
+                            device.status !== 'INACTIVE' &&
+                            device.status !== 'CRITICAL_THREAT' &&
+                            device.status !== 'AUTH_FAILURE',
+                        }"
+                        >{{ device.status || 'UNKNOWN' }}</span
+                      >
+                    </td>
+                    <td>
+                      <div class="trend">
+                        @for (hStatus of deviceTrends[device.id || 0]; track hStatus) {
+                          <span
+                            class="trend-dot"
+                            [ngClass]="{
+                              'trend-ok': hStatus === 'ACTIVE',
+                              'trend-medium': hStatus === 'INACTIVE',
+                              'trend-critical': hStatus === 'CRITICAL_THREAT',
+                              'trend-high': hStatus === 'AUTH_FAILURE',
+                              'trend-info':
+                                hStatus !== 'ACTIVE' &&
+                                hStatus !== 'INACTIVE' &&
+                                hStatus !== 'CRITICAL_THREAT' &&
+                                hStatus !== 'AUTH_FAILURE',
+                            }"
+                            [title]="hStatus"
+                          ></span>
+                        }
+                        @if (
+                          !deviceTrends[device.id || 0] || deviceTrends[device.id || 0].length === 0
+                        ) {
+                          <span class="faint mono trend-empty">veri bekleniyor…</span>
+                        }
+                      </div>
+                    </td>
+                    <td>
+                      <div class="row-actions">
+                        <button
+                          (click)="toggleDeviceHistory(device)"
+                          class="btn btn-sm"
+                          type="button"
+                        >
+                          {{ expandedDeviceId === device.id ? 'Geçmişi Gizle' : 'Geçmiş' }}
+                        </button>
+                        <button
+                          (click)="pingDevice(device.id)"
+                          class="btn btn-sm"
+                          [disabled]="!canRespond"
+                          [title]="roleHint"
+                        >
+                          Anlık Ping
+                        </button>
+                        <button
+                          (click)="simulateAttack(device.id)"
+                          class="btn btn-sm btn-warn"
+                          [disabled]="!canRespond"
+                          [title]="roleHint"
+                        >
+                          DDoS / Port Tarama
+                        </button>
+                        <button
+                          (click)="simulateSshBruteforce(device.id)"
+                          class="btn btn-sm btn-warn"
+                          [disabled]="!canRespond"
+                          [title]="roleHint"
+                        >
+                          SSH / PAM İhlali
+                        </button>
+                        <button
+                          (click)="deleteDevice(device.id)"
+                          class="btn btn-sm btn-danger"
+                          [disabled]="!canRespond"
+                          [title]="roleHint"
+                        >
+                          Sil
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  @if (expandedDeviceId === device.id) {
+                    <tr>
+                      <td colspan="8">
+                        <div class="latency-drawer">
+                          <div class="latency-drawer-head">
+                            <h4>Gecikme Geçmişi · {{ device.name }}</h4>
+                            @if (!latencyLoading && !latencyError) {
+                              <span class="faint mono"> {{ latencySamples.length }} örnek </span>
+                            }
+                          </div>
+                          @if (latencyError) {
+                            <p class="inline-error" role="alert">{{ latencyError }}</p>
+                          }
+                          @if (latencyLoading) {
+                            <div class="state-box">
+                              <div class="glyph">[ … ]</div>
+                              <h4>Yükleniyor</h4>
+                              <p>Cihazın gecikme geçmişi okunuyor.</p>
+                            </div>
+                          }
+                          @if (!latencyLoading && !latencyError) {
+                            <app-sparkline-chart
+                              [points]="latencyChartPoints"
+                              valueSuffix=" ms"
+                              emptyLabel="Bu cihaz için gecikme kaydı yok."
+                              strokeVar="--color-accent"
+                            ></app-sparkline-chart>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+                @if (filteredDevices.length === 0) {
+                  <tr>
+                    <td colspan="8">
+                      <div class="state-box">
+                        <div class="glyph">[ 0 ]</div>
+                        <h4>Cihaz kaydı yok</h4>
+                        <p>
+                          Kriterlere uygun cihaz kaydı tespit edilemedi. Filtreyi genişletin veya
+                          yeni bir düğüm ekleyin.
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                }
               </tbody>
             </table>
           </div>
@@ -300,75 +480,125 @@
             <div class="panel-actions">
               <span class="label">korelasyon motoru üretir · durum geçişleri anlık yayınlanır</span>
               <span class="sev sev-medium">{{ activeIncidents.length }} açık</span>
-              <span class="sev sev-critical" *ngIf="criticalIncidentCount > 0">
-                {{ criticalIncidentCount }} kritik/yüksek
-              </span>
-              <span class="sev sev-info" *ngIf="!canRespond" [title]="roleHint">
-                salt okunur · {{ sessionRole }}
-              </span>
+              @if (criticalIncidentCount > 0) {
+                <span class="sev sev-critical"> {{ criticalIncidentCount }} kritik/yüksek </span>
+              }
+              @if (!canRespond) {
+                <span class="sev sev-info" [title]="roleHint">
+                  salt okunur · {{ sessionRole }}
+                </span>
+              }
             </div>
           </div>
 
           <div class="filters">
-            <button class="chip" [attr.aria-pressed]="incidentScope === 'ACTIVE'"
-                    (click)="incidentScope = 'ACTIVE'">Açık kuyruk · {{ activeIncidents.length }}</button>
-            <button class="chip" [attr.aria-pressed]="incidentScope === 'ALL'"
-                    (click)="incidentScope = 'ALL'">Tüm kayıtlar · {{ allIncidents.length }}</button>
+            <button
+              class="chip"
+              [attr.aria-pressed]="incidentScope === 'ACTIVE'"
+              (click)="incidentScope = 'ACTIVE'"
+            >
+              Açık kuyruk · {{ activeIncidents.length }}
+            </button>
+            <button
+              class="chip"
+              [attr.aria-pressed]="incidentScope === 'ALL'"
+              (click)="incidentScope = 'ALL'"
+            >
+              Tüm kayıtlar · {{ allIncidents.length }}
+            </button>
             <button (click)="refreshIncidents()" class="btn btn-sm push-right">Yenile</button>
           </div>
 
-          <div class="panel-body" *ngIf="realtime.lastRestError() as restError">
-            <p class="inline-error" role="alert">{{ restError }}</p>
-          </div>
-
-          <div class="card-grid" *ngIf="visibleIncidents.length > 0">
-            <article class="card" [ngClass]="stripeClass(inc.severity)" *ngFor="let inc of visibleIncidents">
-              <div class="card-id">
-                <span>INC-{{ inc.id }}</span>
-                <span>{{ inc.createdAt | date:'dd.MM HH:mm:ss' }}</span>
-              </div>
-              <div class="card-title">{{ inc.title }}</div>
-              <p class="card-desc" *ngIf="inc.description">{{ inc.description }}</p>
-
-              <div class="card-meta">
-                <span class="sev" [ngClass]="severityClass(inc.severity)">{{ inc.severity }}</span>
-                <span class="tag">{{ statusLabel(inc.status) }}</span>
-                <span class="tag" *ngIf="inc.sourceDeviceId">DEV-{{ inc.sourceDeviceId }}</span>
-                <span class="tag" *ngIf="inc.mitreTechniqueId">{{ inc.mitreTechniqueId }}</span>
-                <span class="tag" *ngIf="inc.assignee">{{ inc.assignee }}</span>
-              </div>
-
-              <div class="card-meta">
-                <span class="faint mono">güncellendi {{ inc.updatedAt | date:'HH:mm:ss' }}</span>
-                <button *ngIf="nextStatus(inc)" (click)="advanceIncident(inc)" class="btn btn-sm"
-                        [disabled]="transitionPendingId !== null || !canRespond"
-                        [title]="roleHint">
-                  {{ transitionPendingId === inc.id ? 'GÖNDERİLİYOR…' : transitionLabel(inc) }}
-                </button>
-              </div>
-
-              <p class="inline-error" role="alert" *ngIf="transitionErrors[inc.id]">
-                <span>{{ transitionErrors[inc.id] }}</span>
-                <button class="btn btn-sm" (click)="dismissTransitionError(inc.id)">Kapat</button>
-              </p>
-            </article>
-          </div>
-
-          <div class="panel-body" *ngIf="visibleIncidents.length === 0">
-            <div class="state-box" *ngIf="realtime.incidentsLoaded(); else incidentsLoading">
-              <div class="glyph">[ 0 ]</div>
-              <h4>Açık olay yok</h4>
-              <p>Korelasyon motoru şu anda açık bir olay üretmedi. Yeni olaylar ve durum geçişleri kuyruğa canlı olarak düşer.</p>
+          @if (realtime.lastRestError(); as restError) {
+            <div class="panel-body">
+              <p class="inline-error" role="alert">{{ restError }}</p>
             </div>
-            <ng-template #incidentsLoading>
-              <div class="state-box">
-                <div class="glyph">[ … ]</div>
-                <h4>Olay kuyruğu yükleniyor</h4>
-                <p>Sunucudan olay kayıtları okunuyor.</p>
-              </div>
-            </ng-template>
-          </div>
+          }
+
+          @if (visibleIncidents.length > 0) {
+            <div class="card-grid">
+              @for (inc of visibleIncidents; track inc) {
+                <article class="card" [ngClass]="stripeClass(inc.severity)">
+                  <div class="card-id">
+                    <span>INC-{{ inc.id }}</span>
+                    <span>{{ inc.createdAt | date: 'dd.MM HH:mm:ss' }}</span>
+                  </div>
+                  <div class="card-title">{{ inc.title }}</div>
+                  @if (inc.description) {
+                    <p class="card-desc">{{ inc.description }}</p>
+                  }
+                  <div class="card-meta">
+                    <span class="sev" [ngClass]="severityClass(inc.severity)">{{
+                      inc.severity
+                    }}</span>
+                    <span class="tag">{{ statusLabel(inc.status) }}</span>
+                    @if (inc.sourceDeviceId) {
+                      <span class="tag">DEV-{{ inc.sourceDeviceId }}</span>
+                    }
+                    @if (inc.mitreTechniqueId) {
+                      <span class="tag">{{ inc.mitreTechniqueId }}</span>
+                    }
+                    @if (inc.assignee) {
+                      <span class="tag">{{ inc.assignee }}</span>
+                    }
+                  </div>
+                  <div class="card-meta">
+                    <span class="faint mono"
+                      >güncellendi {{ inc.updatedAt | date: 'HH:mm:ss' }}</span
+                    >
+                    @if (nextStatus(inc)) {
+                      <button
+                        (click)="advanceIncident(inc)"
+                        class="btn btn-sm"
+                        [disabled]="transitionPendingId !== null || !canRespond"
+                        [title]="roleHint"
+                      >
+                        {{
+                          transitionPendingId === inc.id ? 'GÖNDERİLİYOR…' : transitionLabel(inc)
+                        }}
+                      </button>
+                    }
+                  </div>
+                  @if (transitionErrors[inc.id]) {
+                    <p class="inline-error" role="alert">
+                      <span>{{ transitionErrors[inc.id] }}</span>
+                      <button class="btn btn-sm" (click)="dismissTransitionError(inc.id)">
+                        Kapat
+                      </button>
+                    </p>
+                  }
+                  <app-incident-comments [incidentId]="inc.id"></app-incident-comments>
+                </article>
+              }
+            </div>
+          }
+
+          @if (visibleIncidents.length === 0) {
+            <div class="panel-body">
+              @if (realtime.incidentsLoaded()) {
+                <div class="state-box">
+                  <div class="glyph">[ 0 ]</div>
+                  <h4>Açık olay yok</h4>
+                  <p>
+                    Korelasyon motoru şu anda açık bir olay üretmedi. Yeni olaylar ve durum
+                    geçişleri kuyruğa canlı olarak düşer.
+                  </p>
+                </div>
+              } @else {
+                <div class="state-box">
+                  <div class="glyph">[ … ]</div>
+                  <h4>Olay kuyruğu yükleniyor</h4>
+                  <p>Sunucudan olay kayıtları okunuyor.</p>
+                </div>
+              }
+            </div>
+          }
         </div>
+      </section>
+
+      <!-- ======================== KURALLAR (RULES CRUD) ======================== -->
+      <section class="view" id="view-rules" aria-label="Korelasyon kuralları">
+        <app-rules-panel></app-rules-panel>
       </section>
 
       <!-- ======================== DENETİM KAYDI ======================== -->
@@ -380,66 +610,112 @@
               <span class="live" [ngClass]="connectionClass">{{ connectionLabel }}</span>
               <label class="search">
                 <span class="faint mono">&gt;</span>
-                <input type="text" [(ngModel)]="logSearchTerm" placeholder="akışta filtrele…"
-                       aria-label="Akışta filtrele">
+                <input
+                  type="text"
+                  [(ngModel)]="logSearchTerm"
+                  placeholder="akışta filtrele…"
+                  aria-label="Akışta filtrele"
+                />
               </label>
               <button (click)="refreshStream()" class="btn btn-sm">Yenile</button>
-              <ng-container *ngIf="streamSource === 'audit'">
+              @if (streamSource === 'audit') {
                 <button (click)="exportLogsAsTxt()" class="btn btn-sm">TXT İndir</button>
                 <button (click)="exportLogsToCSV()" class="btn btn-sm">CSV İndir</button>
-                <button (click)="clearConsoleDisplay()" class="btn btn-sm btn-danger">Temizle</button>
-              </ng-container>
+                <button (click)="clearConsoleDisplay()" class="btn btn-sm btn-danger">
+                  Temizle
+                </button>
+              }
             </div>
           </div>
 
           <div class="filters">
-            <button class="chip" [attr.aria-pressed]="streamSource === 'audit'"
-                    (click)="selectStreamSource('audit')">Denetim kaydı · {{ logs.length }}</button>
-            <button class="chip" [attr.aria-pressed]="streamSource === 'events'"
-                    (click)="selectStreamSource('events')">Ingest olayları · {{ events.length }}</button>
+            <button
+              class="chip"
+              [attr.aria-pressed]="streamSource === 'audit'"
+              (click)="selectStreamSource('audit')"
+            >
+              Denetim kaydı · {{ logs.length }}
+            </button>
+            <button
+              class="chip"
+              [attr.aria-pressed]="streamSource === 'events'"
+              (click)="selectStreamSource('events')"
+            >
+              Ingest olayları · {{ events.length }}
+            </button>
           </div>
 
-          <div class="stream" role="log" aria-live="polite" *ngIf="streamSource === 'audit'">
-            <div *ngFor="let log of filteredLogs" class="ev">
-              <span class="t">{{ log.timestamp | date:'dd.MM.yyyy HH:mm:ss' }}</span>
-              <span class="msg">{{ log.message }}</span>
+          @if (streamSource === 'audit') {
+            <div class="stream" role="log" aria-live="polite">
+              @for (log of filteredLogs; track log) {
+                <div class="ev">
+                  <span class="t">{{ log.timestamp | date: 'dd.MM.yyyy HH:mm:ss' }}</span>
+                  <span class="msg">{{ log.message }}</span>
+                </div>
+              }
+              @if (filteredLogs.length === 0) {
+                <div class="panel-body">
+                  <div class="state-box">
+                    <div class="glyph">[ — ]</div>
+                    <h4>Akış boş</h4>
+                    <p>Belirtilen kriterlere uygun veya aktif bir log akışı bulunmuyor.</p>
+                  </div>
+                </div>
+              }
             </div>
-            <div *ngIf="filteredLogs.length === 0" class="panel-body">
-              <div class="state-box">
-                <div class="glyph">[ — ]</div>
-                <h4>Akış boş</h4>
-                <p>Belirtilen kriterlere uygun veya aktif bir log akışı bulunmuyor.</p>
-              </div>
-            </div>
-          </div>
+          }
 
-          <div class="stream" role="log" aria-live="polite" *ngIf="streamSource === 'events'">
-            <div *ngFor="let ev of filteredEvents" class="ev">
-              <span class="t">{{ ev.occurredAt | date:'dd.MM.yyyy HH:mm:ss' }}</span>
-              <span class="msg event-msg">
-                <span class="sev" [ngClass]="eventSeverityClass(ev.severity)">{{ ev.severity }}</span>
-                <span class="tag">{{ ev.source }}</span>
-                <span class="tag">{{ ev.category }}</span>
-                <span class="event-payload">{{ ev.rawPayload }}</span>
-              </span>
+          @if (streamSource === 'events') {
+            <div class="stream" role="log" aria-live="polite">
+              @for (ev of filteredEvents; track ev) {
+                <div class="ev">
+                  <span class="t">{{ ev.occurredAt | date: 'dd.MM.yyyy HH:mm:ss' }}</span>
+                  <span class="msg event-msg">
+                    <span class="sev" [ngClass]="eventSeverityClass(ev.severity)">{{
+                      ev.severity
+                    }}</span>
+                    <span class="tag">{{ ev.source }}</span>
+                    <span class="tag">{{ ev.category }}</span>
+                    <span class="event-payload">{{ ev.rawPayload }}</span>
+                  </span>
+                </div>
+              }
+              @if (filteredEvents.length === 0) {
+                <div class="panel-body">
+                  <div class="state-box">
+                    <div class="glyph">{{ eventsLoaded ? '[ — ]' : '[ … ]' }}</div>
+                    <h4>
+                      {{
+                        eventsError
+                          ? 'Olay akışı okunamadı'
+                          : eventsLoaded
+                            ? 'Akış boş'
+                            : 'Olaylar yükleniyor'
+                      }}
+                    </h4>
+                    <p>
+                      {{
+                        eventsError ||
+                          'Ingest edilmiş olay kaydı bulunmuyor. Yeni olaylar sunucu kabul ettikçe burada listelenir.'
+                      }}
+                    </p>
+                  </div>
+                </div>
+              }
             </div>
-            <div *ngIf="filteredEvents.length === 0" class="panel-body">
-              <div class="state-box">
-                <div class="glyph">{{ eventsLoaded ? '[ — ]' : '[ … ]' }}</div>
-                <h4>{{ eventsError ? 'Olay akışı okunamadı' : (eventsLoaded ? 'Akış boş' : 'Olaylar yükleniyor') }}</h4>
-                <p>{{ eventsError || 'Ingest edilmiş olay kaydı bulunmuyor. Yeni olaylar sunucu kabul ettikçe burada listelenir.' }}</p>
-              </div>
-            </div>
-          </div>
+          }
 
           <div class="table-foot">
-            <span *ngIf="streamSource === 'audit'">{{ filteredLogs.length }} / {{ logs.length }} kayıt gösteriliyor</span>
-            <span *ngIf="streamSource === 'events'">{{ filteredEvents.length }} / {{ events.length }} olay gösteriliyor</span>
+            @if (streamSource === 'audit') {
+              <span>{{ filteredLogs.length }} / {{ logs.length }} kayıt gösteriliyor</span>
+            }
+            @if (streamSource === 'events') {
+              <span>{{ filteredEvents.length }} / {{ events.length }} olay gösteriliyor</span>
+            }
             <span>en yeni üstte</span>
           </div>
         </div>
       </section>
-
     </main>
   </div>
 </div>

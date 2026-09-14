@@ -17,7 +17,13 @@ import {
   IncidentSeverity,
   IncidentStatus,
   IngestedEvent,
+  LatencySample,
 } from '../../services/siem.models';
+import { BarChart, BarChartDatum } from '../../shared/charts/bar-chart/bar-chart';
+import { SparklineChart, SparklinePoint } from '../../shared/charts/sparkline-chart/sparkline-chart';
+import { computeDeviceTypeUptime, countIncidentsBySeverity, groupIncidentsByDay } from './chart-data';
+import { IncidentComments } from './incident-comments/incident-comments';
+import { RulesPanel } from './rules/rules-panel';
 
 /** Which feed the audit panel is showing. */
 type StreamSource = 'audit' | 'events';
@@ -51,7 +57,7 @@ const READ_ONLY_ROLE_HINT = 'VIEWER rolü bu aksiyonu tetikleyemez; sunucu da re
 @Component({
   selector: 'app-console',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BarChart, SparklineChart, RulesPanel, IncidentComments],
   templateUrl: './console.html',
   styleUrl: './console.css',
 })
@@ -69,15 +75,15 @@ export class ConsolePage implements OnInit {
   logs: AuditLog[] = [];
 
   // Form girdileri
-  deviceName: string = '';
-  deviceIp: string = '';
-  selectedType: string = 'SERVER'; // Varsayılan cihaz tipi
+  deviceName = '';
+  deviceIp = '';
+  selectedType = 'SERVER'; // Varsayılan cihaz tipi
 
   // Arama ve Filtreleme
-  searchTerm: string = '';
-  statusFilter: string = 'ALL';
-  logSearchTerm: string = '';
-  isScanning: boolean = false;
+  searchTerm = '';
+  statusFilter = 'ALL';
+  logSearchTerm = '';
+  isScanning = false;
 
   // Olay kuyruğu artık sunucudan gelir; burada yalnızca görünüm filtresi tutulur.
   incidentScope: 'ACTIVE' | 'ALL' = 'ACTIVE';
@@ -92,10 +98,16 @@ export class ConsolePage implements OnInit {
 
   // SATIR BAZLI SESSİON TREND HAFIZASI
   // Cihaz ID'sine göre son 5 tarama sonucunu (ACTIVE/INACTIVE) dizide tutar
-  deviceTrends: { [key: number]: string[] } = {};
+  deviceTrends: Record<number, string[]> = {};
 
   private unknownDeviceReloadAt = 0;
   private devicesLoaded = false;
+
+  // Per-device gecikme geçmişi: tek seferde en fazla bir cihaz genişletilir.
+  expandedDeviceId: number | null = null;
+  latencyLoading = false;
+  latencyError: string | null = null;
+  latencySamples: LatencySample[] = [];
 
   constructor() {
     // Applies every device push in place. The table is patched row by row, so
@@ -419,6 +431,49 @@ export class ConsolePage implements OnInit {
       : 'sev-info';
   }
 
+  // ======================================================== CİHAZ GEÇMİŞİ
+
+  /**
+   * Expands or collapses the inline latency-history row for one device.
+   * A read-only action available to every authenticated role — there is no
+   * canRespond gate here, only the state-changing device actions need one.
+   */
+  toggleDeviceHistory(device: Device) {
+    if (device.id === undefined) return;
+    if (this.expandedDeviceId === device.id) {
+      this.expandedDeviceId = null;
+      return;
+    }
+    this.expandedDeviceId = device.id;
+    this.loadDeviceLatency(device.id);
+  }
+
+  private loadDeviceLatency(deviceId: number) {
+    this.latencyLoading = true;
+    this.latencyError = null;
+    this.latencySamples = [];
+    this.api.getDeviceLatency(deviceId, 100).subscribe({
+      next: (samples) => {
+        this.latencySamples = samples;
+        this.latencyLoading = false;
+      },
+      error: (error: unknown) => {
+        this.latencyError = describeProblem(error);
+        this.latencyLoading = false;
+      },
+    });
+  }
+
+  get latencyChartPoints(): SparklinePoint[] {
+    return this.latencySamples.map((sample) => ({
+      label: new Date(sample.recordedAt).toLocaleTimeString('tr-TR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      value: sample.latency,
+    }));
+  }
+
   // ======================================================== SAYAÇLAR
 
   get totalDevices(): number {
@@ -437,6 +492,23 @@ export class ConsolePage implements OnInit {
     if (activeWithLatency.length === 0) return 0;
     const sum = activeWithLatency.reduce((acc, d) => acc + (d.latency || 0), 0);
     return Math.round(sum / activeWithLatency.length);
+  }
+
+  // ======================================================== ANALİZ (GRAFİKLER)
+
+  /** Günlük olay sayısı, son 14 gün — mevcut olay verisinden istemci tarafında türetilir. */
+  get incidentTrendData(): BarChartDatum[] {
+    return groupIncidentsByDay(this.allIncidents, 14);
+  }
+
+  /** Şiddete göre olay sayısı — mevcut olay verisinden istemci tarafında türetilir. */
+  get severityDistributionData(): BarChartDatum[] {
+    return countIncidentsBySeverity(this.allIncidents);
+  }
+
+  /** Cihaz tipine göre erişilebilirlik yüzdesi — mevcut cihaz verisinden türetilir. */
+  get deviceTypeUptimeData(): BarChartDatum[] {
+    return computeDeviceTypeUptime(this.devices);
   }
 
   // ======================================================== TEHDİT SEVİYESİ
