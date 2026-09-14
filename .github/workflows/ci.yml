@@ -104,6 +104,18 @@ jobs:
         continue-on-error: true
         run: npm run lint
 
+      - name: Check design token files stay in sync
+        # docs/design/tokens.css is a documentation copy of the stylesheet the
+        # app actually ships (network-ui/src/styles/tokens.css); only their
+        # header comments are allowed to differ. Comparing from the first
+        # ":root {" line to end-of-file catches any drift a manual edit to
+        # only one of the two files would otherwise let slip through
+        # unnoticed (see docs/adr/0004-theme-variants-via-token-overrides.md).
+        run: |
+          diff \
+            <(sed -n '/^:root {/,$p' network-ui/src/styles/tokens.css) \
+            <(sed -n '/^:root {/,$p' docs/design/tokens.css)
+
   # Builds both application images to catch Dockerfile breakage early. Neither
   # image is pushed anywhere - there are no registry credentials in this repo.
   docker-build:
