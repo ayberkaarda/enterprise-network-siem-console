@@ -1,6 +1,6 @@
 # Enterprise Network SIEM Console
 
-*Türkçe sürüm için: [readme.tr.md](readme.tr.md)*
+*Turkish [readme.tr.md](readme.tr.md)*
 
 A self-hosted, modular-monolith SIEM (Security Information and Event Management)
 console for a network operations team: it watches devices, correlates raw
