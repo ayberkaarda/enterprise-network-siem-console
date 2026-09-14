@@ -31,8 +31,11 @@ phase status, what has actually been measured, and decisions still open.
   read-only schema of an already-public API shape).
 - **Frontend**: Angular 21.2, TypeScript 5.9, Vitest 4 (run through `ng test`,
   never `npx vitest run` directly — that skips the zone.js/TestBed setup and
-  fails every spec with "describe is not defined"). `npm test`: **52 tests, 6
-  files, all passing**. `npx ng build` succeeds with only two pre-existing,
+  fails every spec with "describe is not defined"). `npm test`: **72 tests, 8
+  files, all passing**. A Playwright suite (`network-ui/e2e/`) covers a full
+  login → add device → acknowledge incident smoke path and theme-persistence
+  across a reload, both against the app's own dev servers. `npx ng build`
+  succeeds with only two pre-existing,
   unrelated CommonJS warnings (`@stomp/stompjs`, `sockjs-client`, pulled in by
   `realtime.service.ts`). ESLint is wired via `@angular-eslint/schematics`;
   `npm run lint` currently reports **4 known, deliberately unresolved**
@@ -96,32 +99,35 @@ phase status, what has actually been measured, and decisions still open.
   `shared/charts/sparkline-chart` — `ngx-charts`/`ngx-echarts` were tried and
   rejected, both have peer-dependency conflicts with Angular 21.2) driving an
   incident-trend/severity-distribution/device-uptime analytics panel, a
-  per-device latency-history drawer, a live threat-level indicator, and a
-  Rules CRUD screen (ADMIN-gated writes, matching the backend contract).
+  per-device latency-history drawer, a live threat-level indicator, a
+  Rules CRUD screen (ADMIN-gated writes, matching the backend contract), an
+  incident comment thread (read open to any role, posting gated to
+  `ANALYST`/`ADMIN`, author always the signed-in username), and a Settings
+  screen with a four-theme picker (`gunmetal`/`daylight`/`phosphor`/
+  `high-contrast`, `[data-theme]` token overrides, persisted to
+  `localStorage`, applied pre-paint — see
+  `docs/adr/0004-theme-variants-via-token-overrides.md`).
 
 ## Known blockers
 
-All four blockers from the previous revision of this document are resolved:
-the `device.spec.ts`/`Device` naming collision, the red dependency audit, the
-unauthenticated STOMP CONNECT frame, and the WebSocket wildcard origin. What
-is currently open instead:
+All the blockers from earlier revisions of this document are resolved,
+including the `device.spec.ts`/`Device` naming collision, the red dependency
+audit, the unauthenticated STOMP CONNECT frame, the WebSocket wildcard
+origin, the missing incident-comments UI, and the missing Playwright e2e
+suite. What is currently open:
 
 1. **Bare `java -jar` or a plain `docker run` without an active Spring
    profile will still fail** (Postgres-flavored Flyway SQL gets attempted
    against the H2 dialect, or vice versa) — only `docker compose` (sets
    `SPRING_PROFILES_ACTIVE=postgres`) and the test suite (pinned to `h2`) are
    safe entry points. See "Open decisions".
-2. **Incident comments have no frontend.** The backend already has
-   `IncidentComment` (entity, repository, and the audit trail records who
-   changed what), but nothing in `network-ui` displays or adds one — the spec
-   for Phase 5 calls for incident comments in the UI.
-3. **No Settings screen.** The nav has Overview/Devices/Incidents/Rules/Logs;
-   Phase 5's information architecture also calls for a Settings view, not yet
-   built.
-4. **No Playwright e2e smoke test.** Phase 6 calls for at least one
-   (login → add a device → acknowledge an incident); the frontend only has
-   unit tests today.
-5. **Backend "80%+ coverage on critical business logic" is unmeasured.**
+2. **Settings screen covers appearance only.** The nav now has a Settings
+   destination (`ThemeService`, `network-ui/src/app/services/theme.service.ts`)
+   with a four-theme picker (gunmetal/daylight/phosphor/high-contrast),
+   persisted to `localStorage` and applied pre-paint via an inline script in
+   `index.html`. It does not cover anything beyond colour theme; any other
+   settings content is a separate, not-yet-scoped decision.
+3. **Backend "80%+ coverage on critical business logic" is unmeasured.**
    117 tests pass, but no coverage tool (JaCoCo or similar) has been run
    against that target yet.
 
@@ -134,8 +140,8 @@ is currently open instead:
 | 2 | Correlation engine, incident lifecycle, event ingestion, anomaly detection, threat-intel stub | Done |
 | 3 | Real-time push (WebSocket/STOMP topics), virtual threads, scheduler locking, metrics | Done |
 | 4 | Authentication (JWT/RBAC), rate limiting, CORS hardening, audit trail | Done, including STOMP CONNECT-level auth and origin restriction (previously deferred) |
-| 5 | SOC-style frontend: feature routes, design tokens, charts, live threat level | Overview/Devices/Incidents/Rules/Logs views, charts, threat-level indicator and Rules CRUD are functional and wired to real endpoints; incident comments UI and a Settings screen are still open (see "Known blockers") |
-| 6 | Test coverage, CI/CD, documentation, seed data | CI (5 real jobs), README, ADRs, Dockerfiles, DataSeeder, springdoc, and Testcontainers integration tests are done; a Playwright e2e smoke test and a measured coverage number are still open |
+| 5 | SOC-style frontend: feature routes, design tokens, charts, live threat level | Overview/Devices/Incidents/Rules/Logs/Settings views, charts, threat-level indicator, Rules CRUD, incident comments, and a four-theme picker are all functional and wired to real endpoints |
+| 6 | Test coverage, CI/CD, documentation, seed data | CI (5 real jobs), README, ADRs, Dockerfiles, DataSeeder, springdoc, Testcontainers integration tests, and a Playwright e2e smoke suite (login/device/incident + theme persistence) are done; a measured backend coverage number is still open |
 
 ## Open decisions
 
