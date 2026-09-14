@@ -1,32 +1,23 @@
-import { Injectable } from '@angular/core';
-import { Client, Message } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
-import { Subject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { Observable } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root'
-})
+import { RealtimeService } from './realtime.service';
+
+/**
+ * @deprecated Superseded by {@link RealtimeService}, which owns the single
+ * STOMP connection, the typed `/topic/devices`, `/topic/incidents` and
+ * `/topic/metrics` subscriptions, the backed-off reconnect and the REST
+ * polling fallback.
+ *
+ * This shim no longer opens a connection of its own — a second client would
+ * mean a second socket and a second reconnect loop. It only re-exposes the
+ * raw `/topic/alerts` string channel as an observable for callers that have
+ * not moved to the signal API yet, and can be removed once none are left.
+ */
+@Injectable({ providedIn: 'root' })
 export class WebsocketService {
-  private client: Client;
-  private alertSubject = new Subject<any>();
-  public alerts$ = this.alertSubject.asObservable();
+  private readonly realtime = inject(RealtimeService);
 
-  constructor() {
-    this.client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws-siem'),
-      debug: (msg: string) => console.log(msg),
-      reconnectDelay: 5000,
-    });
-
-    this.client.onConnect = (frame) => {
-      console.log('WebSocket Bağlandı: ' + frame);
-      this.client.subscribe('/topic/alerts', (message: Message) => {
-        if (message.body) {
-          this.alertSubject.next(JSON.parse(message.body));
-        }
-      });
-    };
-
-    this.client.activate();
-  }
+  readonly alerts$: Observable<string | null> = toObservable(this.realtime.lastAlert);
 }

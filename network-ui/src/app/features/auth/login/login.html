@@ -1,0 +1,65 @@
+<div class="auth-screen">
+  <div class="auth-grid" aria-hidden="true"></div>
+
+  <main class="auth-panel" aria-labelledby="auth-heading">
+    <div class="auth-brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div>
+        <div class="brand-name">Kron</div>
+        <div class="brand-sub">SIEM KONSOLU</div>
+      </div>
+    </div>
+
+    <div class="auth-body">
+      <div class="label">Kimlik doğrulama</div>
+      <h1 id="auth-heading">Konsola Giriş</h1>
+      <p class="auth-lede">
+        Konsol yetkilendirilmiş operatörlere açıktır. Oturum bilgileri sunucu tarafında
+        doğrulanır; rolünüz hangi aksiyonları tetikleyebileceğinizi belirler.
+      </p>
+
+      <form class="auth-form" (ngSubmit)="submit()" novalidate>
+        <label class="auth-field">
+          <span class="label">Kullanıcı adı</span>
+          <input
+            class="field"
+            type="text"
+            name="username"
+            autocomplete="username"
+            placeholder="operatör kullanıcı adı"
+            [(ngModel)]="username"
+            [disabled]="submitting()"
+            required
+          />
+        </label>
+
+        <label class="auth-field">
+          <span class="label">Parola</span>
+          <input
+            class="field"
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            [(ngModel)]="password"
+            [disabled]="submitting()"
+            required
+          />
+        </label>
+
+        @if (error(); as message) {
+          <p class="auth-error" role="alert">{{ message }}</p>
+        }
+
+        <button type="submit" class="btn btn-primary auth-submit" [disabled]="!canSubmit">
+          {{ submitting() ? 'DOĞRULANIYOR…' : 'OTURUM AÇ' }}
+        </button>
+      </form>
+    </div>
+
+    <div class="auth-foot mono">
+      <span>ADMIN · ANALYST · VIEWER</span>
+      <span>yetki sunucuda zorlanır</span>
+    </div>
+  </main>
+</div>
