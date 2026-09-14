@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { DeviceService, Device, AuditLog } from '../../services/device';
 import { RealtimeService } from '../../services/realtime.service';
+import { ThemeId, ThemeService } from '../../services/theme.service';
 import {
   SiemApiService,
   describeProblem,
@@ -70,6 +71,9 @@ export class ConsolePage implements OnInit {
 
   /** Session owner; drives the identity chip and every role-gated control. */
   readonly auth = inject(AuthService);
+
+  /** Colour theme; the settings screen reads and writes through this. */
+  readonly theme = inject(ThemeService);
 
   devices: Device[] = [];
   logs: AuditLog[] = [];
@@ -280,6 +284,12 @@ export class ConsolePage implements OnInit {
   logout() {
     this.realtime.stop();
     this.auth.logout();
+  }
+
+  // ======================================================== GÖRÜNÜM
+
+  selectTheme(id: ThemeId) {
+    this.theme.setTheme(id);
   }
 
   // ======================================================== INCIDENTS

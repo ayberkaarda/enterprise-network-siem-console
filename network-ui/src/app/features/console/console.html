@@ -64,6 +64,17 @@
         <span>Denetim Kaydı</span>
         <span class="nav-count">{{ logs.length }}</span>
       </a>
+
+      <a class="nav-item" href="#view-settings">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="8" cy="8" r="2" />
+          <path
+            d="M8 2v1.6M8 12.4V14M14 8h-1.6M3.6 8H2M12.1 3.9l-1.1 1.1M5 10l-1.1 1.1M12.1 12.1 11 11M5 6 3.9 4.9"
+          />
+        </svg>
+        <span>Ayarlar</span>
+        <span class="nav-count"></span>
+      </a>
     </nav>
 
     <div class="sidebar-foot">
@@ -712,6 +723,41 @@
               <span>{{ filteredEvents.length }} / {{ events.length }} olay gösteriliyor</span>
             }
             <span>en yeni üstte</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================== AYARLAR (SETTINGS) ======================== -->
+      <section class="view" id="view-settings" aria-label="Ayarlar">
+        <div class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">Görünüm</h2>
+            <span class="label">seçim bu tarayıcıda saklanır · sayfa yenilendiğinde korunur</span>
+          </div>
+          <div class="panel-body">
+            <div class="theme-grid" role="radiogroup" aria-label="Renk teması">
+              @for (option of theme.themes; track option.id) {
+                <button
+                  type="button"
+                  class="theme-card"
+                  [class.is-selected]="theme.theme() === option.id"
+                  role="radio"
+                  [attr.aria-checked]="theme.theme() === option.id"
+                  (click)="selectTheme(option.id)"
+                >
+                  <span class="theme-preview" [attr.data-theme]="option.id">
+                    <span class="swatch swatch-bg"></span>
+                    <span class="swatch swatch-surface"></span>
+                    <span class="swatch swatch-accent"></span>
+                    <span class="swatch swatch-critical"></span>
+                    <span class="swatch swatch-high"></span>
+                    <span class="swatch swatch-ok"></span>
+                  </span>
+                  <span class="theme-name">{{ option.label }}</span>
+                  <span class="theme-desc">{{ option.description }}</span>
+                </button>
+              }
+            </div>
           </div>
         </div>
       </section>

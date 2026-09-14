@@ -2,6 +2,9 @@
 
 Status: Accepted
 
+Amended by: [0004 — Theme variants via token overrides](0004-theme-variants-via-token-overrides.md)
+(its "no light theme is planned" consequence below no longer holds).
+
 ## Context
 
 The current frontend uses default-looking styling: generic card shadows, a

@@ -73,3 +73,129 @@
   --breakpoint-collapse: 820px;
   --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
 }
+
+/* ==========================================================================
+   THEME VARIANTS — colour-only overrides, selected by [data-theme] on
+   <html>. Typography, spacing, layout and radius tokens never vary between
+   themes; only the properties below are repeated per theme. Deliberately a
+   plain attribute selector, not `:root[data-theme=...]`: no `data-theme`
+   attribute at all (a fresh session, storage cleared) means the :root block
+   above applies untouched — today's gunmetal theme, byte-for-byte unchanged.
+   See docs/adr/0004-theme-variants-via-token-overrides.md.
+   ========================================================================== */
+
+/* --- gunmetal, restated under an explicit attribute. Identical to the
+   :root block above; :root always matches the root element regardless of
+   its attributes, so this block is redundant for the app's own top level.
+   It is not redundant for a *descendant* that sets data-theme="gunmetal"
+   while an ancestor carries a different theme — inheritance alone would
+   otherwise leave it showing the ambient theme's colours instead of
+   gunmetal's. The theme-preview swatch in the settings screen is exactly
+   that case. --- */
+[data-theme='gunmetal'] {
+  color-scheme: dark;
+
+  --color-bg: #0d1012;
+  --color-surface: #14181b;
+  --color-surface-2: #1a2024;
+  --color-surface-3: #212930;
+  --color-line: #262e33;
+  --color-line-strong: #3a454c;
+
+  --color-text: #e4eae7;
+  --color-text-secondary: #9aa8a4;
+  --color-text-tertiary: #64716e;
+
+  --color-accent: #efe7d3;
+  --color-accent-ink: #0d1012;
+
+  --color-severity-critical: #ff4d6d;
+  --color-severity-high: #ff9f45;
+  --color-severity-medium: #f5d65b;
+  --color-severity-low: #6ca6ff;
+  --color-severity-info: #8e9ba6;
+  --color-ok: #4fd08a;
+}
+
+/* --- daylight: light theme for bright ambient conditions --- */
+[data-theme='daylight'] {
+  color-scheme: light;
+
+  --color-bg: #e7eae8;
+  --color-surface: #f3f5f4;
+  --color-surface-2: #fafbfa;
+  --color-surface-3: #ffffff;
+  --color-line: #cbd3ce;
+  --color-line-strong: #7f8d87;
+
+  --color-text: #151a18;
+  --color-text-secondary: #465350;
+  --color-text-tertiary: #5f6e69;
+
+  --color-accent: #3a3630;
+  --color-accent-ink: #f6f2e8;
+
+  --color-severity-critical: #c4143c;
+  --color-severity-high: #a84a08;
+  --color-severity-medium: #7d6000;
+  --color-severity-low: #1d5ab8;
+  --color-severity-info: #56666e;
+  --color-ok: #1a7346;
+}
+
+/* --- phosphor: deeper, more saturated dark variant, same green-gray family
+   as gunmetal. Severity and device-health colours are intentionally left
+   unset here so they inherit gunmetal's — a critical incident keeps the same
+   hue in every dark theme. --- */
+[data-theme='phosphor'] {
+  color-scheme: dark;
+
+  --color-bg: #06100a;
+  --color-surface: #0a1610;
+  --color-surface-2: #0f1d15;
+  --color-surface-3: #15271c;
+  --color-line: #1b3327;
+  --color-line-strong: #3d6d5a;
+
+  --color-text: #d6ecdc;
+  --color-text-secondary: #8fb09b;
+  --color-text-tertiary: #6d8f7b;
+
+  --color-accent: #efe7d3;
+  --color-accent-ink: #06100a;
+}
+
+/* --- high-contrast: near-black/near-white, AAA-target text contrast, for
+   low-vision use. Tints are boosted from 14/12% to 24% so severity chips
+   stay visibly tinted against near-black surfaces. --- */
+[data-theme='high-contrast'] {
+  color-scheme: dark;
+
+  --color-bg: #000000;
+  --color-surface: #0b0b0b;
+  --color-surface-2: #161616;
+  --color-surface-3: #222222;
+  --color-line: #6e6e6e;
+  --color-line-strong: #a0a0a0;
+
+  --color-text: #ffffff;
+  --color-text-secondary: #e6e6e6;
+  --color-text-tertiary: #c4c4c4;
+
+  --color-accent: #ffd633;
+  --color-accent-ink: #000000;
+
+  --color-severity-critical: #ff7088;
+  --color-severity-high: #ffb45c;
+  --color-severity-medium: #ffe45c;
+  --color-severity-low: #93bfff;
+  --color-severity-info: #d2d9de;
+  --color-ok: #64e89f;
+
+  --tint-critical: color-mix(in oklab, var(--color-severity-critical) 24%, var(--color-surface));
+  --tint-high: color-mix(in oklab, var(--color-severity-high) 24%, var(--color-surface));
+  --tint-medium: color-mix(in oklab, var(--color-severity-medium) 24%, var(--color-surface));
+  --tint-low: color-mix(in oklab, var(--color-severity-low) 24%, var(--color-surface));
+  --tint-info: color-mix(in oklab, var(--color-severity-info) 24%, var(--color-surface));
+  --tint-ok: color-mix(in oklab, var(--color-ok) 24%, var(--color-surface));
+}
