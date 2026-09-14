@@ -1,0 +1,42 @@
+/*
+ * Design tokens for the SOC console visual identity.
+ * See docs/adr/0003-visual-identity-tactical-telemetry.md for rationale.
+ * Dark-only by design — no light-theme variant is defined.
+ */
+
+:root {
+  /* Surfaces */
+  --color-bg: #0D1012;
+  --color-surface: #14181B;
+  --color-surface-2: #1A2024;
+  --color-surface-3: #212930;
+
+  /* Text */
+  --color-text: #E4EAE7;
+  --color-text-secondary: #9AA8A4;
+  --color-text-tertiary: #64716E;
+
+  /* Accent — selection, focus, active nav, primary buttons. Nothing else. */
+  --color-accent: #EFE7D3;
+
+  /* Severity — status only, never chrome */
+  --color-severity-critical: #FF4D6D;
+  --color-severity-high: #FF9F45;
+  --color-severity-medium: #F5D65B;
+  --color-severity-low: #6CA6FF;
+  --color-severity-info: #8E9BA6;
+
+  /* Device / system health — separate meaning from severity */
+  --color-ok: #4FD08A;
+
+  /* Typography */
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+
+  /* Layout */
+  --rail-width: 216px;
+  --row-height: 34px;
+  --radius: 2px;
+  --breakpoint-collapse: 820px;
+}
