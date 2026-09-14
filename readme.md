@@ -148,7 +148,7 @@ Versions below are read directly from `demo/pom.xml` and `network-ui/package.jso
 | Grafana | `grafana/grafana:latest` |
 | Frontend web server | `nginx:alpine` (multi-stage build serving the compiled Angular bundle) |
 
-> API documentation (springdoc-openapi / Swagger UI) is planned but not wired into `demo/pom.xml` yet — there is currently no `/swagger-ui.html` to reach. The curl examples below are the accurate current reference until that lands.
+> API documentation is available at `/swagger-ui.html` and `/v3/api-docs` (springdoc-openapi) once the backend is running. The curl examples below remain the quickest reference for scripting against the API.
 
 ---
 

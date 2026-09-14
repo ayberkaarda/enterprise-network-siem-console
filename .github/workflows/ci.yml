@@ -63,21 +63,46 @@ jobs:
         # "npx ng build" step.
         run: npm run build
 
-  # No ESLint config (network-ui/eslint.config.*) and no Java formatter/linter
-  # (Checkstyle or Spotless in demo/pom.xml) exist in this repository yet.
-  # A Prettier config (network-ui/.prettierrc) is present but not wired to any
-  # script or gate. Rather than invent a tool choice and a pass/fail threshold
-  # that nobody has agreed on, this job is a deliberate, visible no-op — it
-  # exists so the pipeline shape (build + test + lint + docker + dependency-scan)
-  # is already in place once a formatter/linter is chosen. See the CI report
-  # for this open decision.
+  # Backend formatting (Spotless + palantir-java-format) and frontend linting
+  # (ESLint via @angular-eslint) are both wired as their own step so a
+  # formatting/lint failure is visible without blocking the build/test jobs
+  # above. spotless:check is deliberately not bound to the verify phase (see
+  # demo/pom.xml), so it is invoked here explicitly.
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Lint placeholder (no linter/formatter configured yet)
-        run: |
-          echo "No ESLint config for network-ui/ and no Checkstyle/Spotless for demo/ yet."
-          echo "This step intentionally does nothing until that tooling choice is made."
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 26
+        uses: actions/setup-java@v4
+        with:
+          java-version: '26'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Check backend formatting (Spotless)
+        working-directory: ./demo
+        run: ./mvnw -q spotless:check
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: network-ui/package-lock.json
+
+      - name: Install dependencies (lockfile-exact)
+        working-directory: ./network-ui
+        run: npm ci
+
+      - name: Lint frontend (ESLint)
+        working-directory: ./network-ui
+        # Non-blocking for now: realtime.service.ts intentionally keeps
+        # constructor injection (4 known prefer-inject violations) because its
+        # spec constructs the service without Angular DI; switching either
+        # side is an open decision, not something this step should fail on.
+        continue-on-error: true
+        run: npm run lint
 
   # Builds both application images to catch Dockerfile breakage early. Neither
   # image is pushed anywhere - there are no registry credentials in this repo.
