@@ -65,8 +65,8 @@
   display: flex;
   align-items: center;
   gap: var(--s-3);
-  height: 56px;
-  padding: 0 var(--s-5);
+  min-height: 56px;
+  padding: var(--s-2) var(--s-5);
   border-bottom: 1px solid var(--color-line);
 }
 

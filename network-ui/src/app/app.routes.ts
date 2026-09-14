@@ -13,13 +13,13 @@ import { authGuard, guestGuard } from './services/auth.guard';
 export const routes: Routes = [
   {
     path: 'login',
-    title: 'Giriş · Kron SIEM',
+    title: 'Giriş · Enterprise Network SIEM Console',
     canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/login/login').then((m) => m.LoginPage),
   },
   {
     path: '',
-    title: 'Kron SIEM Konsolu',
+    title: 'Enterprise Network SIEM Console',
     canActivate: [authGuard],
     loadComponent: () => import('./features/console/console').then((m) => m.ConsolePage),
   },

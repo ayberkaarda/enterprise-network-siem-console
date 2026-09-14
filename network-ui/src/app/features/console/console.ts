@@ -583,7 +583,7 @@ export class ConsolePage implements OnInit {
   exportLogsAsTxt() {
     if (this.logs.length === 0) return;
     let fileContent =
-      '==================================================\n        KRON AUDIT LOG GÜVENLİK RAPORU\n==================================================\n\n';
+      '==================================================\n        ENTERPRISE NETWORK SIEM CONSOLE AUDIT LOG GÜVENLİK RAPORU\n==================================================\n\n';
     this.logs.forEach((l) => {
       fileContent += `[${l.timestamp}] - ${l.message}\n`;
     });
@@ -591,7 +591,7 @@ export class ConsolePage implements OnInit {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `kron_audit_report_${Date.now()}.txt`;
+    a.download = `siem_audit_report_${Date.now()}.txt`;
     a.click();
   }
 
