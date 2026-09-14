@@ -316,6 +316,18 @@ Larger, harder-to-reverse choices are recorded under `docs/adr/`:
 | **Incidents** — lifecycle actions and a comment thread | ![Incidents view with a comment thread](docs/screenshots/incidents.jpg) |
 | **Rules** — correlation rule CRUD | ![Rules management screen](docs/screenshots/rules.jpg) |
 
+### Themes
+
+Four color themes, switchable from the Settings screen and persisted across
+reloads (see [ADR 0004](docs/adr/0004-theme-variants-via-token-overrides.md)):
+
+| | |
+|---|---|
+| **Theme picker** — Gunmetal (default), Daylight, Phosphor, High-Contrast | ![Theme picker with all four palettes](docs/screenshots/themes.jpg) |
+| **Daylight** | ![Overview in the Daylight theme](docs/screenshots/overview-daylight.jpg) |
+| **Phosphor** | ![Overview in the Phosphor theme](docs/screenshots/overview-phosphor.jpg) |
+| **High-Contrast** | ![Overview in the High-Contrast theme](docs/screenshots/overview-high-contrast.jpg) |
+
 ## License
 
 Dual-licensed under either of

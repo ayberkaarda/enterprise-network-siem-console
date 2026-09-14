@@ -323,6 +323,18 @@ Daha büyük, geri alınması daha zor kararlar `docs/adr/` altında kayıtlıd�
 | **Olaylar** — yaşam döngüsü aksiyonları ve yorum akışı | ![Yorum akışı ile Olaylar görünümü](docs/screenshots/incidents.jpg) |
 | **Kurallar** — korelasyon kuralı CRUD'u | ![Kural yönetimi ekranı](docs/screenshots/rules.jpg) |
 
+### Temalar
+
+Ayarlar ekranından seçilebilen ve sayfa yenilemede kalıcı olan dört renk
+teması (bkz. [ADR 0004](docs/adr/0004-theme-variants-via-token-overrides.md)):
+
+| | |
+|---|---|
+| **Tema seçici** — Gunmetal (varsayılan), Gündüz, Fosfor, Yüksek Kontrast | ![Dört paletin tamamını gösteren tema seçici](docs/screenshots/themes.jpg) |
+| **Gündüz** | ![Gündüz temasında Genel Bakış](docs/screenshots/overview-daylight.jpg) |
+| **Fosfor** | ![Fosfor temasında Genel Bakış](docs/screenshots/overview-phosphor.jpg) |
+| **Yüksek Kontrast** | ![Yüksek Kontrast temasında Genel Bakış](docs/screenshots/overview-high-contrast.jpg) |
+
 ## Lisans
 
 Aşağıdakilerden herhangi biri altında çift lisanslıdır:
