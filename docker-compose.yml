@@ -6,8 +6,8 @@ services:
     container_name: siem-postgres
     environment:
       POSTGRES_DB: siem_console
-      POSTGRES_USER: siem_admin
-      POSTGRES_PASSWORD: SecureNetwork!2026
+      POSTGRES_USER: ${POSTGRES_USER:-siem_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set, see .env.example}
     ports:
       - "5432:5432"
     volumes:
@@ -27,6 +27,8 @@ services:
       - siem-db
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://siem-db:5432/siem_console
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-siem_admin}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set, see .env.example}
     networks:
       - siem-network
 

@@ -6,6 +6,7 @@ target/
 *.iml
 *.log
 application-local.properties
+.env
 
 # Frontend (Angular & Node) Çöpleri
 node_modules/
