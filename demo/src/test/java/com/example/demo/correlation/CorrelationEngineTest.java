@@ -510,7 +510,13 @@ class CorrelationEngineTest {
 
     @Test
     void subnetOutageFallsBackToTheDefaultDownStatusWhenTheConditionOmitsIt() {
-        loadRules(rule(2L, "Simultaneous subnet outage", "{\"type\":\"subnet_outage\",\"prefixOctets\":3}", 1, 120, Severity.HIGH));
+        loadRules(rule(
+                2L,
+                "Simultaneous subnet outage",
+                "{\"type\":\"subnet_outage\",\"prefixOctets\":3}",
+                1,
+                120,
+                Severity.HIGH));
 
         engine.onDeviceEvent(statusChange(device(11L, "rack-a", "10.0.5.11"), "ACTIVE", "INACTIVE", -1L));
 
